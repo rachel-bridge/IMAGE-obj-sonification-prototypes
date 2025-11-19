@@ -1,6 +1,7 @@
 # Description
 Sound design prototypes for [IMAGE](https://image.a11y.mcgill.ca/).
 
+More detailed documentation for all of these can be found in the `documentation` directory. This is just an overview.
 
 
 # Designs
@@ -9,8 +10,6 @@ Sound design prototypes for [IMAGE](https://image.a11y.mcgill.ca/).
 
 
 ## Scan
-See README for this specific demo for the nitty gritty implementation details.
-
 This design plays with assigning real-life representational sounds to regions, as well as depicting height within the 2D projection of the picture. It maps the identified regions to a representational sound (e.g. waves on a lake for water-related sounds). It then "scans" up the picture from bottom to top, and the sound for each region appears, disappears, and grows lounder or quieter in the sonification where that region takes up more or less space in the picture.
 
 Put another way, each of the regions detected in an image has an associated sound. Imagine a bar scanning over the image from bottom to top: the sound of a region plays when that region is present under that bar. The volume of the sound is proportional to how much of image it takes up under the bar.
