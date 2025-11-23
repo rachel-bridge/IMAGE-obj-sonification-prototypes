@@ -72,9 +72,9 @@ function initSounds() {
 }
 
 
-// KEYBINDINGS
+// KEYBINDINGS / PLAYBACK
 document.addEventListener('keydown', handleDown);
-document.addEventListener('keyup', handleUp);
+// document.addEventListener('keyup', handleUp); //not used atm :/
 
 function handleDown(e) {
   // if user holding down key, do nothing w/ keypresses after first
@@ -92,19 +92,20 @@ function handleDown(e) {
       Tone.getTransport().stop();
     }
     else if (transport.state == 'stopped') {
-      sonify(false, true); //val of movingUp doesn't matter
+      sonify(false, true); //val of movingUp doesn't matter, repeating = true
     }
   }
   // moving up (initial keypress)
   if (e.key == MOVE_UP) {
-    sonify(true);
+    sonify(true); //movingUp = true
   }
   // moving down (initial keypress)
   if (e.key == MOVE_DOWN) {
-    sonify(false);
+    sonify(false); //movingUp = false
   }
 }
 
+// *not used at the moment* -- we only care abt individual keypresses
 function handleUp(e) {
   return;
 }
