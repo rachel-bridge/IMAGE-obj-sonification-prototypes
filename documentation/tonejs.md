@@ -50,6 +50,7 @@ The wiki article is a pretty good conceptual overview. For actual implementation
 
 I have beef with Tone.Transport. Everything else combined is about the same amount of notes lol. 
 
+- "Destination" (`Tone.Destination`, `toDestination()`) is the output device, basically. Since we're assuming users just have normal computer speakers or headphones, we can (**I think!!**) pretty much ignore output device.
 - **'Buffer' = 'ToneAudioBuffer'**. You may see discussion online of the `Buffer` class, because that exists in Web Audio and older versions of Tone.js. From v14 on, that's called `ToneAudioBuffer` ([docs](https://tonejs.github.io/docs/15.1.22/classes/ToneAudioBuffer.html)). Only the name is changed.
 - `Reverb.wet` property is on range [0, 1] (['NormalRange'](https://tonejs.github.io/docs/15.1.22/types/Unit.NormalRange.html))
 - `SequenceOptions` are only described in the code: see [here](https://github.com/Tonejs/Tone.js/blob/d2d52ffa8803b35debd9f19f2da08ad1c3540de0/Tone/event/Sequence.ts#L76)
