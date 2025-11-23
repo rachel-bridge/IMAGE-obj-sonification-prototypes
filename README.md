@@ -99,3 +99,10 @@ Controls (repeated in instructions):
 - "Region": something identified by the semantic segmentation, using [this schema](https://github.com/Shared-Reality-Lab/IMAGE-server/blob/2945b52da77bf74b1307e7e2286c6297ebef6157/preprocessors/segmentation.schema.json)
 - "Object" (in context of IMAGE output): something identified by object detection, using [this schema](https://github.com/Shared-Reality-Lab/IMAGE-server/blob/2945b52da77bf74b1307e7e2286c6297ebef6157/preprocessors/object-detection.schema.json)
 - "2D panning": exclusively left-right panning
+
+
+
+# TODOs (incomplete)
+- reduce the number of global vars esp. in the "scan" prototypes
+- versions of all prototypes w/ more pictures
+- implement UI features for `scan_segmented`
