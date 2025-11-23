@@ -1,7 +1,7 @@
 # Description
 Sound design prototypes for [IMAGE](https://image.a11y.mcgill.ca/).
 
-More detailed documentation for all of these can be found in the `documentation` directory. This is just an overview.
+**More detailed documentation for all of these can be found in the `documentation` directory.** This is just an overview.
 
 
 # Designs
