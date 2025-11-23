@@ -39,7 +39,7 @@ The wiki article is a pretty good conceptual overview. For actual implementation
 
 - `Tone.getTransport.stop()` restarts the `Transport`, i.e. **sets its time to 0**. Transport.pause() does *not* do this.
   - `.stop()` in the middle of playback means it will pick up again from the beginning next time. `.pause()` means it’ll pick back up where it left off.
-- Once you've scheduled something into `Transport`, you *cannot* stop it. It's like, you've already sent the signal and you can't un-send it. You can mute the `Transport` until it's done, but that's it.
+- **Once you've scheduled something into `Transport` and started it, you *cannot* stop/cancel the scheduled audio**. It's like you've already sent the signal and you can't un-send it. You can mute the `Transport` until it's done, but that's it.
   - I have not found a way around this. The Scan prototype just mutes the `Transport` to stop midway through, and the next "start" restarts the Transport to fake like you stopped it entirely. Yes this is a crappy workaround.
 - The wiki and other docs talk a lot about the distinction between `Transport` time and the absolute clock time as seconds from load. **The way to access "TransportTime"** is: call `Tone.TransportTime().valueOf()`.
   - All variations on `.immediate()` or `.now()` (either `Tone.now()` or on any object that has that function) just get you the absolute clock time (afaik).
@@ -63,6 +63,8 @@ I have beef with Tone.Transport. Everything else combined is about the same amou
 
 The `Player` class is used to play back an audio file (like an mp3). For generating and manipulating multiple tones from an audio file, much easier to use a `Sampler`.
 
+- You can set `Player.name` but you gotta do it after initialization, b/c for whatever reason, `name` isn't a valid key in `Tone.PlayerOptions`. It won't crash if you put it in there, it'll just get ignored.
+- `Player` objects have an associated buffer, which you can access through `Player.buffer` and get useful information like the duration of the associated audio file. However, this is not intialized immediately (no clue why). I could get around this pretty easily so I didn't look far into when exactly that's initialized. Just something to be aware of.
 - `Player.onstop()` is called whenever the player stops playing, including pauses where it hasn’t reached the end of the track!
   - I am unsure whether `onstop()` is called when the `Transport` pauses as well, or if it's only when the `Transport` is stopped, because I don't think I'd figured out enough about `Transport` to check that when I wrote this down.
 - You can access the duration of a Player audio file by going to player.buffer.duration (this is technically documented but it is not clear).
