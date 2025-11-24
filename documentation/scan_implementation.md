@@ -18,7 +18,7 @@ This prototype has not implemented the more complex UI features implemented in t
 There are a lot of global variables and I'd like to get rid of some of them, but haven't had time yet.
 
 The things that are meant to be configurable are separated as variables at the top of the file, to make changing them easier. These are:
-- `MOVE_UP`, `MOVE_DOWN`, `TOGGLE_PLAY` (str): names (**as set in KeyboardEvents library**) of the keys that trigger moving up nd down within the sonification, and play/pause
+- `TRIGGER_UP`, `TRIGGER_DOWN`, `TOGGLE_PLAY` (str): names (**as set in KeyboardEvents library**) of the keys that trigger moving up nd down within the sonification, and play/pause
 - `NUM_SEGMENTS` (int): number of segments to divide the sonification into. **Defaults to 4**.
 - `LOOPS` (boolean): whether each segment loops or just plays once. **Defaults to true**.
 
@@ -53,16 +53,16 @@ The sonification is conceptually divided into 4 (by default, could be any number
 
 The program sets a hard limit of that range: decrementing past 0 or incrementing past the "end" index does nothing.
 
-The program starts on segment 0. The segment number is incremented between the user pressing the `MOVE_UP` or `MOVE_DOWN` keys and the actual playback. Thus, when the page first loads, pressing the `TOGGLE_PLAY` key will play the "start" sound, and pressing the `MOVE_UP` key will play the first segment. Because of the hard limit on indices, if the user presses `MOVE_DOWN` on page load (or when they've navigated back to the start), it will skip updating the `sgmt_tracker` and replay "start" sound.
+The program starts on segment 0. The segment number is incremented between the user pressing the `TRIGGER_UP` or `TRIGGER_DOWN` keys and the actual playback. Thus, when the page first loads, pressing the `TOGGLE_PLAY` key will play the "start" sound, and pressing the `TRIGGER_UP` key will play the first segment. Because of the hard limit on indices, if the user presses `TRIGGER_DOWN` on page load (or when they've navigated back to the start), it will skip updating the `sgmt_tracker` and replay "start" sound.
 
-Likewise, hitting `MOVE_UP` when you're already at the end just replays the "end" sound.
+Likewise, hitting `TRIGGER_UP` when you're already at the end just replays the "end" sound.
 
 ### 3.2. Handling user (keyboard) input
 There is an `EventListener` for "keydown" events of any kind, which immediately calls the function `handleDown()`. *NOTE: there is the outline to easily implement a response when the user lifts the key, but it's not currently used. Since we only care about individual keypresses here, keydown and keyup might as well be the same event.*
 
-The function `handleDown()` ignores all but the initial keydown (i.e. keydown events that keep being sent when a user holds down a key). It explicitly handles the three important keys (`MOVE_UP`, `MOVE_DOWN`, and `TOGGLE_PLAY`, defined above), and lets everything else just run through and return without doing anything.
+The function `handleDown()` ignores all but the initial keydown (i.e. keydown events that keep being sent when a user holds down a key). It explicitly handles the three important keys (`TRIGGER_UP`, `TRIGGER_DOWN`, and `TOGGLE_PLAY`, defined above), and lets everything else just run through and return without doing anything.
 
-On `MOVE_UP` and `MOVE_DOWN`, it calls the `sonify()` helper function with a flag saying which one it was (boolean `movingUp`). On `TOGGLE_PLAY`, it either stops the sounds currently playing, or calls the same `sonify()` helper to resume. In the latter case, it throws in an optional flag (`repeating = true`) to indicate that this is replaying the current segment. See why below.
+On `TRIGGER_UP` and `TRIGGER_DOWN`, it calls the `sonify()` helper function with a flag saying which one it was (boolean `movingUp`). On `TOGGLE_PLAY`, it either stops the sounds currently playing, or calls the same `sonify()` helper to resume. In the latter case, it throws in an optional flag (`repeating = true`) to indicate that this is replaying the current segment. See why below.
 
 ### 3.3. NOTE - pausing playback
 As described in the Tone.js additional documentation (`documentation/tonejs.md`), you cannot simply "stop" or pause playback of something that's already scheduled into the `Transport`. This implementation works by setting all the `Players` (for each region) to play on a certain time interval. For this reason, the only way I could figure out to stop playback once it started was to go through and mute every `Player` in the array. This also means it has to check and unmute if necessary before starting playback again. It's a hacky workaround, so if you come up with something better please go ahead and change it lol.

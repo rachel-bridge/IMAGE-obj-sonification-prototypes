@@ -9,8 +9,8 @@ ASSUMPTIONS:
 
 // FILE-GLOBAL VARS
 // reference global vars: these are just defaults, and are editable
-const MOVE_UP = 'ArrowUp';
-const MOVE_DOWN = 'ArrowDown';
+const TRIGGER_UP = 'ArrowUp';
+const TRIGGER_DOWN = 'ArrowDown';
 const TOGGLE_PLAY = ' '; //space
 var NUM_SEGMENTS = 4; //int, number of segments to divide the sonification into
 var LOOPS = true; //bool, whether each segment loops or just plays once
@@ -96,11 +96,11 @@ function handleDown(e) {
     }
   }
   // moving up (initial keypress)
-  if (e.key == MOVE_UP) {
+  if (e.key == TRIGGER_UP) {
     sonify(true); //movingUp = true
   }
   // moving down (initial keypress)
-  if (e.key == MOVE_DOWN) {
+  if (e.key == TRIGGER_DOWN) {
     sonify(false); //movingUp = false
   }
 }
