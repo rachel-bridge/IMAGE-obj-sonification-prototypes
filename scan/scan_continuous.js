@@ -107,16 +107,20 @@ document.addEventListener('keydown', handleDown);
 // document.addEventListener('keypress', handle); //deprecated, doesn't matter
 
 function handleDown(e) {
-  console.log(`keydown. state = ${Tone.getTransport().state}`);
+  // console.log(`keydown. state = ${Tone.getTransport().state}`);
   // console.log(Tone.TransportTime().valueOf())
+
+  // return early if unrecognized key
+  if (!(e.key == TRIGGER_UP || e.key == TRIGGER_DOWN)) {
+    return;
+  }
+  // on repeat (signals from held keypress), stop when gets to the end, else ignore
   if (e.repeat) {
-    if (Tone.getTransport().state == 'stopped') {
-      console.log('STOP - REPEAT 1')
-      return;
-    }
     if (Tone.TransportTime().valueOf() >= players[0].buffer.duration) {
-      console.log('STOP - REPEAT 2')
       Tone.getTransport().stop();
+    }
+    else {
+      return;
     }
   } 
   else if (e.key == TRIGGER_UP) { //initial press, scanning up
@@ -149,27 +153,26 @@ function sonify(movingUp) {
 }
 
 function handleUp(e) {
-  if (Tone.getTransport.state == 'stopped') {
+  if (Tone.getTransport.state == 'stopped' || !(e.key == TRIGGER_UP || e.key == TRIGGER_DOWN)) {
     return;
   }
-  if (e.key == TRIGGER_UP || e.key == TRIGGER_DOWN) { // lifting of important key
-    console.log('keyup');
-    // console.log(Tone.getTransport().state)
-    // if hit or passed the end of the loop
-    if (Tone.TransportTime().valueOf() > players[0].buffer.duration) {
-      console.log('STOP')
-      Tone.getTransport().stop();
-    }
-    // // if not hit the end of the loop
-    // else {
-    //   for (var i = 0; i < players.length; i++) {
-    //     players[i].loopStart = 0;
-    //     console.log(players[i].get())
-    //   }
-    //   Tone.getTransport().stop();
-    // }
-    Tone.getTransport().pause();
+  // else, important key was lifted -- stop playback
+  console.log('keyup');
+  // console.log(Tone.getTransport().state)
+  // if hit or passed the end of the loop
+  if (Tone.TransportTime().valueOf() >= players[0].buffer.duration) {
+    console.log('STOP')
+    Tone.getTransport().stop();
   }
+  // // if not hit the end of the loop
+  // else {
+  //   for (var i = 0; i < players.length; i++) {
+  //     players[i].loopStart = 0;
+  //     console.log(players[i].get())
+  //   }
+  //   Tone.getTransport().stop();
+  // }
+  Tone.getTransport().pause();
 }
 
 
