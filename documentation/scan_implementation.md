@@ -14,7 +14,7 @@ For how to go about editing the sounds programmatically, the implementation of "
 # Segmented
 This prototype has not implemented the more complex UI features implemented in the coninuous sound version: playing individual sounds on their own, and selecting specific regions to play in the sonification.
 
-## Global variables
+## 1. Global variables
 There are a lot of global variables and I'd like to get rid of some of them, but haven't had time yet.
 
 The things that are meant to be configurable are separated as variables at the top of the file, to make changing them easier. These are:
@@ -32,7 +32,7 @@ Finally, there are a couple global variables that are referenced by several func
 - `sgmt_tracker` (= 0): tracks which segment it's on. Starts at 0 ("start").
 - `PLAYERS`: array of the `Tone.Player` objects for all the regions.
 
-## Setup / Initialization
+## 2. Setup / Initialization
 On load, the script calls `initSounds()`. This goes through each entry in the `regions_to_play` dict, and if selected, creates a `Tone.Player` object for that region from the audio file URL. The `Player`'s name is set to the name of the region for easier debugging.
 
 If `LOOPS` is true (if each segment should loop continuously), it syncs the `Player` to the `TransportTime` and sets it to start at time 0.  **I FORGET WHY OOPS COME BACK TO THIS**
@@ -45,21 +45,41 @@ All these `Player` objects are added to an array, which is returned at the end. 
 
 **Why not use `Tone.Players`?** Tone.js has an object (`Players`) that combines multiple `Player` objects, similarly to the array used here. I didn't use it, because it's mainly useful if you're doing the same thing to all those `Player`s. Since here, we're specifically going to be doing *different* things to every `Player` (region), it didn't really add anything and was confusing.
 
-## Playback
+## 3. Playback
 This uses the KeyboardEvent API to sync to user keybaord input, and Tone.js to play audio.
 
-### Handling user (keyboard) input
+### 3.1. Segmentation, & moving b/w segments
+The sonification is conceptually divided into 4 (by default, could be any number) segments, 1-indexed. Segment 0 (zero) is reserved for the "start" sound, and an additional segment at the end corresponds to the "end" sound. A global "segment tracker" (`sgmt_tracker`) tracks that index number.
+
+The program sets a hard limit of that range: decrementing past 0 or incrementing past the "end" index does nothing.
+
+The program starts on segment 0. The segment number is incremented between the user pressing the `MOVE_UP` or `MOVE_DOWN` keys and the actual playback. Thus, when the page first loads, pressing the `TOGGLE_PLAY` key will play the "start" sound, and pressing the `MOVE_UP` key will play the first segment. Because of the hard limit on indices, if the user presses `MOVE_DOWN` on page load (or when they've navigated back to the start), it will skip updating the `sgmt_tracker` and replay "start" sound.
+
+Likewise, hitting `MOVE_UP` when you're already at the end just replays the "end" sound.
+
+### 3.2. Handling user (keyboard) input
 There is an `EventListener` for "keydown" events of any kind, which immediately calls the function `handleDown()`. *NOTE: there is the outline to easily implement a response when the user lifts the key, but it's not currently used. Since we only care about individual keypresses here, keydown and keyup might as well be the same event.*
 
 The function `handleDown()` ignores all but the initial keydown (i.e. keydown events that keep being sent when a user holds down a key). It explicitly handles the three important keys (`MOVE_UP`, `MOVE_DOWN`, and `TOGGLE_PLAY`, defined above), and lets everything else just run through and return without doing anything.
 
 On `MOVE_UP` and `MOVE_DOWN`, it calls the `sonify()` helper function with a flag saying which one it was (boolean `movingUp`). On `TOGGLE_PLAY`, it either stops the sounds currently playing, or calls the same `sonify()` helper to resume. In the latter case, it throws in an optional flag (`repeating = true`) to indicate that this is replaying the current segment. See why below.
 
-#### NOTE - pausing playback
-As described in the Tone.js additional documentation (`documentation/tonejs.md`), you cannot simply "stop" or pause playback of something that's already scheduled into the `Transport`. This implementation works by setting all the `Players` (for each region) to play on a certain time interval. For this reason, the only way I could figure out to stop playback once it started was to go through and mute every `Player`, and then check and unmute if necessary before starting playback again. It's a hacky workaround, so if you come up with something better please go ahead and change it lol.
+### 3.3. NOTE - pausing playback
+As described in the Tone.js additional documentation (`documentation/tonejs.md`), you cannot simply "stop" or pause playback of something that's already scheduled into the `Transport`. This implementation works by setting all the `Players` (for each region) to play on a certain time interval. For this reason, the only way I could figure out to stop playback once it started was to go through and mute every `Player` in the array. This also means it has to check and unmute if necessary before starting playback again. It's a hacky workaround, so if you come up with something better please go ahead and change it lol.
 
-### Playing a segment (`sonify()` helper)
-First, 
+### 3.4 Playing a segment (`sonify()` helper)
+First, "move" the script to the correct segment by incrementing or decrementing the `sgmt_tracker` (segment tracker). That flag that says whether user moved up or down (bool `movingUp`) determines which. If the optional `repeating` flag is set, skip this step. As described in 3.1, if this operation would take it outside the permitted range, also skip this step.
+
+Depending on the value of `sgmt_tracker` after this, it either plays the start sound or end sound, or calls another helper function (`playAllRegions()`) to play the appropriate segment of the sonification (logic separated for legibility).
+
+In short, that helper function calculates segment duration and start time within the audio tracks ("offset"), sets the `Player` for each region to play (or loop) over that time, and starts the playback.
+
+In more detail: 
+1. Since the segments are of equal length, segment len = length of an audio track / number of segments.
+2. The offset (how far into the tracks to pick up playing) is 0 for segment 1, [segment len] for segment 2, 2 * [segment len] for segment 3, ...etc. Thus, offset = `(sgmt_tracker - 1) * [segment len]`.
+3. If the segments should loop, it sets `loopStart = offset` and `loopEnd = offset + [segment len]` for each `Player`. Otherwise, use the optional parameters to `Player.start()` to have it start playing at `TransportTime = 0` but from `offset = offset` within the audio track, and for `duration = segment len`. 
+    - In the latter case, also set `Transport` to stop after that duration. This maps `Transport.state == 'started'` to whether audio is still playing for the user, which the handler of `TOGGLE_PLAY` keypress needs to know. 
+4. It then starts the playback from `TransportTime = 0` with `Tone.getTransport().start()` (`getTransport` not `Transport`: using v15 syntax).
 
 
 # Continuous Sound
