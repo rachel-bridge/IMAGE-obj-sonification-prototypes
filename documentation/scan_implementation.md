@@ -83,6 +83,17 @@ In more detail:
 
 
 # Continuous Sound
+**IMPORTANT: This prototype is not complete.** Specifically, the backwards playback doesn't pick up from the right time. The file is also generally messier and still has some debug stuff in it: I'll clean that up at some point, probably (sorry).
+
+The implementation of this prototype is broadly very similar to the implementation of the segmented prototype detailed above, so this section will just go over what's different.
+
+## Unfinished - backwards playback
+With a Tone.js `Player` object, calling `Player.reverse()` reverses the associated audio track and *does not* change the `TransportTime`. Effect best illustrated through example: say you've paused 3 seconds into a 9 second recording, and now you want to play backwards to the start. You'd expect to pick up from that same **point in the track**. But under the current implementation, you'd pick up from **3 seconds into the *reversed* track**, which is **6 seconds into the regular (un-reversed) track**. 
+
+**The obvious way to fix this is to manually set the time** (either using the `offset` parameter in `Tone.Player.start()`, or the `TransportTime` parameter in `Tone.getTransport().start()`). I was partway through fixing this before I abandoned it in favour of the (more easily-implemented) segmented idea.
+
+## Handling user (keyboard) input
+There are two EventListeners: one for "keydown" and one for "keyup" events, because 
 
 
 # User Interface
