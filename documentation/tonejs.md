@@ -5,6 +5,7 @@ Because this API is very handy and cool but its documentation is... lacking, at 
 **Github: <https://github.com/Tonejs/Tone.js>**
 **Wiki: <https://github.com/Tonejs/Tone.js/wiki>**
 **Official documentation: [v15](https://tonejs.github.io/docs/15.1.22/index.html), [v14](https://tonejs.github.io/docs/14.7.77/)**
+**Another (unofficial?) up-to-date wiki: <https://deepwiki.com/Tonejs/Tone.js/7-examples-and-tutorials>**
 
 This project uses v15.
 
@@ -21,12 +22,15 @@ Deprecated classes/variables in v15 (only `Destination` and `Transport` are used
 - `Listener`
 - `Transport`
 
+In short, anytime you want to access the `Destination` or `Transport` (or the others), which are global, use the getter instead.
+
 
 ## Timing - Tone.Transport / Tone.getTransport()
 
 The Transport class is used a lot in this code because that's what controls timing, and the documentation for it is confusing as all hell.
 
 ### Official docs' info
+
 In the interest of not reinventing the wheel...
 - Wiki article: <https://github.com/Tonejs/Tone.js/wiki/TransportTime>
 - v14 docs for Transport class: <https://tonejs.github.io/docs/14.7.77/Transport>
@@ -46,20 +50,16 @@ The wiki article is a pretty good conceptual overview. For actual implementation
 - `Tone.getTransport().start()` and `.stop()` start/stop the playback relative to the absolute timer. Other things, like `Tone.Loop().start()`/`.stop()` and Events will (I think) start/stop relative to `TransportTime` ([source](https://github.com/Tonejs/Tone.js/wiki/TransportTime#example)).
 
 
-## Everything else
 
-I have beef with Tone.Transport. Everything else combined is about the same amount of notes lol. 
+## Error messages
 
-- "Destination" (`Tone.Destination`, `toDestination()`) is the output device, basically. Since we're assuming users just have normal computer speakers or headphones, we can (**I think!!**) pretty much ignore output device.
-- **'Buffer' = 'ToneAudioBuffer'**. You may see discussion online of the `Buffer` class, because that exists in Web Audio and older versions of Tone.js. From v14 on, that's called `ToneAudioBuffer` ([docs](https://tonejs.github.io/docs/15.1.22/classes/ToneAudioBuffer.html)). Only the name is changed.
-- `Reverb.wet` property is on range [0, 1] (['NormalRange'](https://tonejs.github.io/docs/15.1.22/types/Unit.NormalRange.html))
-- `SequenceOptions` are only described in the code: see [here](https://github.com/Tonejs/Tone.js/blob/d2d52ffa8803b35debd9f19f2da08ad1c3540de0/Tone/event/Sequence.ts#L76)
-  - This isn't the only case of this. If the constructor for a class mentions "[object]Options" but doesn't have it documented, it does always link to the definition in the code and that's generally very readable for quick reference.
-- The `Filter` class encompasses things like low pass and high pass filters *(this was not obvious to me)*. 
-- For controlling volume (e.g. ramp from x to y in a specific shape): `Tone.Gain`. Specifically, the `[Gain obj].gain` property. It has funcs like `rampTo()`, `exponentialRampTo()`...etc that are not well documented.
-  - Links: [docs for Gain](https://github.com/Tonejs/Tone.js/blob/dev/Tone/core/context/Param.ts#L64) > [code for Gain constructor](https://github.com/Tonejs/Tone.js/blob/d2d52ffa8803b35debd9f19f2da08ad1c3540de0/Tone/core/context/Gain.ts#L57) > [code for Param internal](https://tonejs.github.io/docs/15.1.22/classes/Gain.html)
+The first thing to note is that for all these prototypes, the console is flooded with the following warning "*An AudioContext was prevented from starting automatically. It must be created or resumed after a user gesture on the page.*". This is just indicating that the sounds used in the prototype rely on user input to be played, and do not play automatically: it's not a cause for concern.
 
-### Player class
+Actual error I kept getting: "**buffer is either not set or not loaded**". Inspecting the code with the cosnole debugger showed that the buffer was, in fact, loaded. Mystery!
+According to the main developer of Tone.js on a [GitHub issue thread](https://github.com/Tonejs/Tone.js/issues/528), "That error happens if your samples are not loaded before you try to play a note". **To fix**, ensure that the tone generator (e.g. `Tone.Sampler` object) is not created in the same function as you're trying to make it play something. Chaining classes (e.g. a `Sampler` and a `Panner`) that were defined in different contexts can also cause this error.
+
+
+## Player class
 
 The `Player` class is used to play back an audio file (like an mp3). For generating and manipulating multiple tones from an audio file, much easier to use a `Sampler`.
 
@@ -69,6 +69,53 @@ The `Player` class is used to play back an audio file (like an mp3). For generat
   - I am unsure whether `onstop()` is called when the `Transport` pauses as well, or if it's only when the `Transport` is stopped, because I don't think I'd figured out enough about `Transport` to check that when I wrote this down.
 - You can access the duration of a Player audio file by going to player.buffer.duration (this is technically documented but it is not clear).
 
-### StackOverflow links
-- "Buffer is either not set or not loaded": [this StackOverflow answer](https://stackoverflow.com/a/57527608) seems like the solution, but it's from v13 and for me, it actually *caused* the issue it's trying to solve. This might be because of a weird setup on my end?
-  - Avoid this issue is by not chaining Tone classes (e.g. a Sampler and a Panner) that were defined in different scopes.
+
+## Timing of `triggerAttackRelease`
+I haven't figured out how to play a tone from the same `Sampler` multiple times with different effects, without just making separate `Sampler` objects for each one. This is because `triggerAttackRelease()` gets invoked with, functionally, the **final state within that context**.  
+
+Here are a few examples using `Channel` objs to pan a simple `Sample`:
+```
+const basicTone = new Tone.Sampler({ D1: 'D1.mp3' });
+const channel1 = new Tone.Channel({ pan: -0.25 });
+const channel2 = new Tone.Channel({ pan: 1 });
+```
+In the following code, `basicTone` is played twice through `channel2`. You hear two tones, both panned hard right. There are two options here: the outcome of both each is the exact same. Apparent execution order is commented.
+```
+// OPTION 1
+basicTone.chain(channel2, Tone.getDestination());   // 1
+basicTone.triggerAttackRelease("D1", 0.5, 0);       // 2
+basicTone.triggerAttackRelease("D1", 0.5, 1);       // 3
+
+// OPTION 2
+basicTone.chain(channel1, Tone.getDestination());   // 1
+basicTone.triggerAttackRelease("D1", 0.5, 0);       // 4
+basicTone.disconnect(channel1);                     // 2
+
+basicTone.chain(channel2, Tone.getDestination());   // 3
+basicTone.triggerAttackRelease("D1", 0.5, 1);       // 5
+```
+In the following code, `basicTone` is sent through both `channel1` and `channel2`. The result is that the panning overlaps, and you hear two tones, both apparently panned halfway between -0.25 and 1. There's also a bit of distortion from that. Apparent execution order is commented.
+```
+basicTone.chain(channel1, Tone.getDestination());   // 1
+basicTone.triggerAttackRelease("D1", 0.5, 0);       // 3
+basicTone.chain(channel2, Tone.getDestination());   // 2
+basicTone.triggerAttackRelease("D1", 0.5, 1);       // 4
+```
+There is probably a way around this, but it would require spending more time on this than I have, so I'm working around it by just making different `Sampler` instances.
+
+
+## Other (Miscellaneous)
+
+**Destination**: It's the output device, basically. Accessed via `.toDestination()` (at the end of a contrsuctor) or `Tone.getDestination()`. Since we're assuming users just have normal computer speakers or headphones, we can (*I think!!*) pretty much ignore output device.
+
+**'Buffer' = 'ToneAudioBuffer'**. You may see discussion online of the `Buffer` class, because that exists in Web Audio and older versions of Tone.js. From v14 on, that's called `ToneAudioBuffer` ([docs](https://tonejs.github.io/docs/15.1.22/classes/ToneAudioBuffer.html)). Only the name is changed.
+
+**Reverb wet value range**: `Reverb.wet` property is on range [0, 1] (['NormalRange'](https://tonejs.github.io/docs/15.1.22/types/Unit.NormalRange.html))
+
+**Find SequenceOptions**: `SequenceOptions` are only described in the code: see [here](https://github.com/Tonejs/Tone.js/blob/d2d52ffa8803b35debd9f19f2da08ad1c3540de0/Tone/event/Sequence.ts#L76)
+  - This isn't the only case of this. If the constructor for a class mentions "[object]Options" but doesn't have it documented, it does always link to the definition in the code and that's generally very readable for quick reference.
+
+**Filters**: The `Filter` class encompasses things like low pass and high pass filters *(this was not obvious to me)*. 
+
+**Volume control & Gain**: For controlling volume (e.g. ramp from x to y in a specific shape): `Tone.Gain`. Specifically, the `[Gain obj].gain` property. It has funcs like `rampTo()`, `exponentialRampTo()`...etc that are not well documented.
+  - Links: [docs for Gain](https://github.com/Tonejs/Tone.js/blob/dev/Tone/core/context/Param.ts#L64) > [code for Gain constructor](https://github.com/Tonejs/Tone.js/blob/d2d52ffa8803b35debd9f19f2da08ad1c3540de0/Tone/core/context/Gain.ts#L57) > [code for Param internal](https://tonejs.github.io/docs/15.1.22/classes/Gain.html)
