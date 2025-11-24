@@ -95,18 +95,6 @@ function generateTonesFromObjects(data) {
   }
 }
 
-// returns the tone that marks the end of an object tone
-// at this point, it is not panned
-function generateStopTone() {
-  var echo = new Tone.Sampler({
-    urls: {
-        D1: D_URL,
-    },
-    baseUrl: "audio_tracks/",
-    release: 0.5, //longer release for the echo
-  });
-}
-
 // normalize from centroid x coord on [0, 1] to Tone.Panner input on [-1, 1]
 function normalizePanX(x) {
   // function for this in the comment block at the top of the file
@@ -226,15 +214,12 @@ const basicTone = new Tone.Sampler({
 
 const sampler = new Tone.Sampler(
   {
-    A1: "audio_tracks/tennis_ball_hit.mp3"
-  },
-  {
-    onload: () => {
-      // console.log('hit loaded');
-    }
+    A1: "audio_tracks/tennis_ball_hit.mp3",
+    D1: 'audio_tracks/clean_d_str_pick.mp3'
   }
 ).toDestination();
 
 document.querySelector("button").addEventListener("click", () => {
-  sampler.triggerAttack("A2");
+  sampler.triggerAttackRelease("A1", 0.5, 1);
+  sampler.triggerAttackRelease("D1", 1, 0);
 });
