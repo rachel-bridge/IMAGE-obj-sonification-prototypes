@@ -2,8 +2,8 @@
 // that's why this breaks everything?? I have actually no idea.
 // NEW VERSION OF THE JS USING TONE.JS API
 
-const triggerUp = 'ArrowUp'
-const triggerDown = 'ArrowDown'
+const TRIGGER_UP = 'ArrowUp'
+const TRIGGER_DOWN = 'ArrowDown'
 
 // const start_ping = 'audio_tracks/start.mp3'
 // const stop_ping = 'audio_tracks/stop.mp3'
@@ -119,10 +119,10 @@ function handleDown(e) {
       Tone.getTransport().stop();
     }
   } 
-  else if (e.key == triggerUp) { //initial press, scanning up
+  else if (e.key == TRIGGER_UP) { //initial press, scanning up
     sonify(true);
   } 
-  else if (e.key == triggerDown) { //initial press, scanning down
+  else if (e.key == TRIGGER_DOWN) { //initial press, scanning down
     sonify(false);
   }
 }
@@ -152,7 +152,7 @@ function handleUp(e) {
   if (Tone.getTransport.state == 'stopped') {
     return;
   }
-  if (e.key == triggerUp || e.key == triggerDown) { // lifting of important key
+  if (e.key == TRIGGER_UP || e.key == TRIGGER_DOWN) { // lifting of important key
     console.log('keyup');
     // console.log(Tone.getTransport().state)
     // if hit or passed the end of the loop
