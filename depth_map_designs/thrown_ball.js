@@ -26,7 +26,7 @@ const TOGGLE_PLAY = ' '; //key to toggle play/pause
 
 // sonification timing parameters
 const TONE_SPACING = 0.5; //in seconds, time between end of one tone and start of next
-const STOP_DURATION = 0.3; //in seconds, how long the secondary tone lasts
+const SECONDARY_DURATION = 0.3; //in seconds, how long the secondary tone lasts
 
 var toneEvents = []; //list of tone event objs used in playback, populate during loading
 
@@ -115,7 +115,7 @@ function setStartTimes() {
   var curTime = 0;
   for (var i = 0; i < toneEvents.length; i++) {
     toneEvents[i].time = curTime; //0 when i = 0
-    curTime = curTime + toneEvents[i].offset + STOP_DURATION + TONE_SPACING;
+    curTime = curTime + toneEvents[i].offset + SECONDARY_DURATION + TONE_SPACING;
   }
 }
 
@@ -143,7 +143,7 @@ function handleDown(e) {
 function playTone(time, value) {
   // value contains `name` for the 'captioning', not implemented yet
   value.primaryTone.triggerAttackRelease("D1", value.offset, time);
-  value.secondaryTone.triggerAttackRelease("D1", STOP_DURATION, time + value.offset);
+  value.secondaryTone.triggerAttackRelease("D1", SECONDARY_DURATION, time + value.offset);
 }
 
 
