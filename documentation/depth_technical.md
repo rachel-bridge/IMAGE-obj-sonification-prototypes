@@ -54,7 +54,7 @@ This section describes two prototypes that are very similar. The core idea is fo
 
 The variations on this idea are:
 - "echo" prototype - `depth_map_designs/echo.js`: The secondary tone is a synthesized echo of the first one. It uses the same "base" sound as the primary tone. The secondary tone for different objects has different degrees of effects applied depending on depth.
-- "thrown ball" prototype - `depth_map_designs/thrown_ball.js`: The secondary tone is exclusively to mark the end of the primary tone. It uses a different "base" sound than the primary tone, but is exactly the same for every object.
+- "duration" prototype - `depth_map_designs/duration.js`: The secondary tone is exclusively to mark the end of the primary tone. It uses a different "base" sound than the primary tone, but is exactly the same for every object.
 
 ## Configuration / Globals
 There are a few global variables for parameters that should be easy to change. These are:
@@ -152,7 +152,7 @@ f(x) = \begin{cases}
     <img src="cutoff_freq_curve-desmos-pw.png" height="500" alt="Graph of depth vs cutoff frequency, screenshotted from Desmos.com">
 </div>
 
-### "Thrown ball" Effects
+### "Duration" Effects
 The main tone is passed through the **panner**, and then to output. The secondary ("stop") tone is passed in series through the **volume**, **panner**, and then to output.
 
 > [!WARNING]
