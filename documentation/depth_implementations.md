@@ -59,6 +59,8 @@ There's also a global `toneEvents` array, which is global because it needs to be
 ### Effects
 The main tone is passed through the **panner**, and then to output. The echo is passed in series through the **reverb**, **low pass filter**, **panner**, and finally to output.
 
+If you want to change any of these parameters, you can generally change the normalized min and max and see what that does to it, and go from there.
+
 #### Panning
 For each object, the original tone and its echo are both panned to the same location.
 The x coordinate of the object centroid (from json def'n) is normalized to the [-1, 1] range (instead of [0, 1] original range).
@@ -73,7 +75,7 @@ These ranges were chosen by trial and error. For context: common values for reve
 #### Low pass filter
 A low pass filter is applies to the echo tone of each object, with cutoff frequency based on the object's depth. The rolloff is always the same (12dB/octave, default).
 The result is passed as the `frequency` parameter of a `Tone.Filter` object with `type="lowpass"`.
-The depth value is put through a function that converts it to frequency in hertz (Hz). I used a completely arbitrary function that produced the results I wanted. The important thing is that the cutoff frequency drops off more sharply through the higher frequencies. The higher frequencies sound much closer together to the human ear, which was probably why it sounded like it wasn't getting "far away" fast enough with a linear function.
+The depth value is put through a function that converts it to frequency in hertz (Hz). I used a completely arbitrary function that produced the results I wanted. The important thing is that the cutoff frequency drops off more sharply through the higher frequencies. The higher frequencies sound much closer together to the human ear, which was probably why it sounded like it wasn't getting "far away" fast enough with a linear function. There's a floor of 950Hz, which was arbitrarily chosen as the lowest the cutoff frequency could go, based on trial and error.
 ```math
 f(x) = \begin{cases}
   6000 & 0 <= x < 0.05\\
@@ -109,6 +111,9 @@ Once the tones and echoes are initialized, and the `toneEvents` array populated,
 (0 \lor \text{[start time of previous tone]}) + \text{[echoDelay for this object]} + \text{ECHO\_DURATION} + \text{TONE\_SPACING}
 ```
 where `ECHO_DURATION` and `TONE_SPACING` are global (easily configurable) variables. Their purpose is exactly what the name says.
+
+### Handling user (keyboard) input
+There is one `EventListener` for the "keydown" event, which calls a `handleDown()` function. This function checks if the 
 
 
 ## Multiple Echoes (`echo_multiple.js`) - superseded
