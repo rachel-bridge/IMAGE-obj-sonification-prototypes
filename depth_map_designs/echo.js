@@ -163,13 +163,9 @@ function handleDown(e) {
   }
   if (Tone.getTransport().state == "started") {
     Tone.getTransport().toggle();
-    // NOTE: this doesn't stop the playback once it's started, but
-    // it at least lets you play it again.
-    // TODO: make it stop playback once it's started
   }
   else {
     playAllTones();
-    // playbackTester();
   }
 }
 
