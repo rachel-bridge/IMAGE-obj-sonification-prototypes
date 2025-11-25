@@ -183,21 +183,21 @@ function playTone(time, value) {
 
 // TEST/MISC
 // this holds my experimental messing around, you may disregard :)
-function playbackTester() {
-  const basicTone = new Tone.Sampler({
-    urls: {
-        D1: D_URL,
-    },
-    baseUrl: "audio_tracks/",
-    release: 0.3,
-  }).toDestination();
-  // const freeverb = new Tone.Freeverb().toDestination();
-  // freeverb.dampening = 1000;
-  // basicTone.connect(freeverb);
-  // basicTone.triggerAttackRelease("D1", 0.9);
+// function playbackTester() {
+//   const basicTone = new Tone.Sampler({
+//     urls: {
+//         D1: D_URL,
+//     },
+//     baseUrl: "audio_tracks/",
+//     release: 0.3,
+//   }).toDestination();
+//   // const freeverb = new Tone.Freeverb().toDestination();
+//   // freeverb.dampening = 1000;
+//   // basicTone.connect(freeverb);
+//   // basicTone.triggerAttackRelease("D1", 0.9);
 
-  // const vol1 = new Tone.Volume(-20).toDestination();
-  // const osc = new Tone.Oscillator().connect(vol1).start(0);
-  // console.log(tones)
-  // tones[1].triggerAttackRelease("D1", 0.8)
-}
+//   // const vol1 = new Tone.Volume(-20).toDestination();
+//   // const osc = new Tone.Oscillator().connect(vol1).start(0);
+//   // console.log(tones)
+//   // tones[1].triggerAttackRelease("D1", 0.8)
+// }
