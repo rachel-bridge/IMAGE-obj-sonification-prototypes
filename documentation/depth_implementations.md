@@ -15,6 +15,11 @@ These prototypes obviously depend on the depth map, which is not currently integ
 
 It doesn't really matter what that depth value refers to (e.g. depth value of pixel closest to centroid, average value across bounding box, ...). I've been imagining it to be the average value within the outline of the object.
 
+The parameters of effects are computed based on the json definition it receives, typically by normalizing some value (e.g. depth) onto a different range. This is done using the following equation, where the initial range (of the value in the json schema) is $[a,b]$ and the new range is $[c,d]$, and given that $b > a$:\
+$$
+f(x) = c + \frac{d-c}{b-a} * (x - a)
+$$
+
 
 # "Thrown Ball" (idk what else to call it...)
 
@@ -40,6 +45,30 @@ e.g. [YouTube tutorial](https://www.youtube.com/watch?v=cyv5-YLe4Qw) on this
 ## Single Echo (`echo.js`)
 
 ### Effects
+
+#### Panning
+For each object, the original tone and its echo are both panned to the same location.
+The x coordinate of the object centroid (from json def'n) is normalized to the [-1, 1] range (instead of [0, 1] original range).
+This value is passed as parameter to a `Tone.Panner` object. 
+
+#### Reverb
+A reverb is applied to the echo tone of each object, with parameters based on the object's depth (from json def'n).
+The
+
+    // set 2D pan using x coordinate of centroid
+    var panner = new Tone.Panner(normalizePanX(x));
+    // find the time between the intial tone and the echo
+    var delayTime = normalizeDepthToDelay(depth)
+    // create effects for the echo
+    var r_decay, r_wet = normalizeDepthToReverb(depth);
+    var reverb = new Tone.Reverb({
+      decay: r_decay,
+      wet: r_wet
+    });
+    var lowPassFilter = new Tone.Filter({
+      type: "lowpass",
+      frequency: normalizeDepthToFilter(depth)
+    });
 
 
 ## Multiple Echoes (`echo_multiple.js`) - superseded
