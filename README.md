@@ -109,3 +109,4 @@ Controls (repeated in instructions):
 - `scan_continous` backwards playback start from the correct point in track
 - clean up `scan/scan_continuous.js`
 - the start/stop in "echo" prototype makes the tones a little louder every time you pause: 3 pauses in and it's so loud the noise is breaking. No *clue* why, gotta fix that.
+- read out names (label tones) in depth_map prototypes

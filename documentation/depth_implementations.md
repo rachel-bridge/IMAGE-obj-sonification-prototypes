@@ -6,7 +6,7 @@
 
 
 # General (all variations)
-As noted in more detail in the documentation for Tone.js (`documentation/tonejs.md`), I have not figured out how to apply different effects to different calls on the same `ToneAudio` object (`Sampler`, `Player`, ...etc). Thus, even when the same sound is used for every object, a separate instance of the tone generator (probably a `Sampler`) was created for each one to allow for different effects (at minimum, different panning).
+As noted in more detail in the documentation for Tone.js (`./tonejs.md`), I have not figured out how to apply different effects to different calls on the same `ToneAudio` object (`Sampler`, `Player`, ...etc). Thus, even when the same sound is used for every object, a separate instance of the tone generator (probably a `Sampler`) was created for each one to allow for different effects (at minimum, different panning).
 
 ## Potential integration w/ IMAGE
 In order to (hopefully) make it easier to integrate into IMAGE, these prototypes all generate, edit, time, and play back the tones for all objects using a JSON file following an existing IMAGE schema. Specifically, the object detection schema (linked above). I haven't yet set this up to work with the [semantic segmentation schema](https://github.com/Shared-Reality-Lab/IMAGE-server/blob/2945b52da77bf74b1307e7e2286c6297ebef6157/preprocessors/segmentation.schema.json).
@@ -21,6 +21,9 @@ f(x) = c + \left(\frac{d-c}{b-a}\right) (x - a)
 ```
 
 The order of objects in that JSON file is the order they are played in.
+
+## Limitations
+The main glaring limitation of all these prototypes is that the tones are not labelled. There are audio clips from an online free text-to-speech service that can be played in advance of tones, and there's space in the main config object (similar across all prototypes described here) for that info, it just hasn't been implemented yet.
 
 
 # "Thrown Ball" (idk what else to call it...)
@@ -113,7 +116,16 @@ Once the tones and echoes are initialized, and the `toneEvents` array populated,
 where `ECHO_DURATION` and `TONE_SPACING` are global (easily configurable) variables. Their purpose is exactly what the name says.
 
 ### Handling user (keyboard) input
-There is one `EventListener` for the "keydown" event, which calls a `handleDown()` function. This function checks if the 
+There is one `EventListener` for the "keydown" event, which calls a `handleDown()` function. This function checks if the key pressed was `TOGGLE_PLAY`, and exits early if not. Then if the playback is already started, it stops it using `Tone.getTransport().toggle()`. This will not stop playback immediately (as mentioned in the Tone.js supplementary documentation `./tonejs.md`) but will stop at the end of the current tone (another TODO to make this better).
+
+Otherwise, it creates a (new every time) `Tone.Part` object which goes through every element in the `toneEvents` array (this is what it's for) and calls a callback (`playTone()`). The callback plays the main tone (`.tone`) for its set duration (`.echoDelay` or 0.4s whichever is the larger) at its set time (`.time`), then the echo tone (`.echo`) for `ECHO_DURATION` seconds at time `.time + .echoDelay`. By API specification, this callback must take a `time` argument and a `value` argument: however, `value` can be a dict as long as "time" is one of the keys. This is what I did here, to pass items of `toneEvents` as `value`.
+
+Once that's created, it calls `Tone.getTransport().start()` to start the scheduled playback.
+
+### Limitations / Bugs
+A specific bug in this prototype is that if you keep playing/pausing, the tones get louder (not immediately but pretty quickly), to the point that after about 3 play/pauses it gets uncomfortably loud and the sound is distorted.
+
+I have absolutely no idea why this is, and have not had the time to look into it (sorry).
 
 
 ## Multiple Echoes (`echo_multiple.js`) - superseded
