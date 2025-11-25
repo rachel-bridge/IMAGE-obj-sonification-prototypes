@@ -22,7 +22,7 @@ f(x) = c + \left(\frac{d-c}{b-a}\right) (x - a)
 
 The order of objects in that JSON file is the order they are played in.
 
-# Making something sound farther away
+## Making something sound farther away
 To make something sound far away, add the following effects:
 - low pass filter: attenuate (limit) high frequencies
     Use a `Tone.Filter` object with the parameter `type = "lowpass"` and default (12dB/octave) rolloff. Cutoff frequency discussed later**WHERE**.
@@ -59,7 +59,7 @@ At load, the fetch API is used to read the contents of the specified (above) JSO
 ## Effects
 The main tone is passed through the **panner**, and then to output. The secondary ("stop") tone is passed in series through the **volume**, **panner**, and then to output.
 
-> [!CAUTION]
+> [!WARNING]
 > Passing the "stop" tone through the panner and *then* the volume editor does not work: volume gets skipped.
 
 ### Panning
@@ -71,7 +71,7 @@ This value is passed as parameter to a `Tone.Panner` object.
 A `Tone.Volume` object is used to lower the volume of the secondary "stop" tone, just because the stock sound I picked is a bit loud. It's lowered by 14 decibels (14dB). **If a different stock sound is picked, this should be adjusted or removed.**
 
 > [!NOTE]
-> This could be done with a single `Volume` instance that is connected to every "stop" tone using `send()`/`receive()` instead of `connect()`: good to look into.
+> This could be done with a single `Volume` instance that is connected to every "stop" tone using `send()`/`receive()` instead of `connect()`. I have no time right now though.
 
 ## Tone event array
 A global array of tone info objects (`toneEvents`) is populated during initialization and forms the basis of playback. The name maybe isn't the best, because these are *not* `Tone.Event` objects. It is so named because it is passed as the `events` array to the `Tone.Part` object, which schedules the tones.
@@ -97,9 +97,14 @@ Once the tones and echoes are initialized, and the `toneEvents` array populated,
 where `STOP_DURATION` and `TONE_SPACING` are global (easily configurable) variables. Their purpose is exactly what the name says.
 
 ## Handling user (keyboard) input
-There is one `EventListener` for the "keydown" event, which calls a `handleDown()` function. This function checks if the key pressed was `TOGGLE_PLAY`, and exits early if not. Then if the playback is already started, it stops it using `Tone.getTransport().toggle()`. This will not stop playback immediately (as mentioned in the Tone.js supplementary documentation `./tonejs.md`) but will stop at the end of the current tone (another TODO to make this better).
+There is one `EventListener` for the "keydown" event, which calls a `handleDown()` function. This function checks if the key pressed was `TOGGLE_PLAY`, and exits early if not. Then if the playback is already started, it stops it using `Tone.getTransport().toggle()`. 
 
-Otherwise, it creates a (new every time) `Tone.Part` object which goes through every element in the `toneEvents` array (this is what it's for) and calls a callback (`playTone()`). The callback plays the main tone (`.tone`) for its set duration (`.duration` or 0.4s whichever is the larger) at its set time (`.time`), then the stop tone (`.stopTone`) for `STOP_DURATION` seconds at time `.time + .duration`. By API specification, this callback must take a `time` argument and a `value` argument: however, `value` can be a dict as long as "time" is one of the keys. This is what I did here, to pass items of `toneEvents` as `value`.
+> [!NOTE]
+> This will not stop playback immediately (as mentioned in the Tone.js supplementary documentation `./tonejs.md`) but will stop at the end of the current tone (another TODO to make this better).
+
+Otherwise, create a (new every time) `Tone.Part` object with `events = toneEvents` (this is what it's for). A custom callback (`playTone()`) plays the main tone (`.objTone`) for its set duration (`.duration` or 0.4s whichever is the larger) at its set time (`.time`), then the stop tone (`.stopTone`) for `STOP_DURATION` seconds at time `.time + .duration`. 
+
+By API specification, this callback must take a `time` argument and a `value` argument: however, `value` can be a dict as long as "time" is one of the keys. This is what I did here, to pass items of `toneEvents` as `value`.
 
 Once that's created, it calls `Tone.getTransport().start()` to start the scheduled playback.
 
@@ -146,34 +151,22 @@ f(x) = \begin{cases}
 The amount of time before the echo sounds is calculated by normalizing the depth value to a different range, in seconds. The range [0.01, 3] was selected, where the echo begins 0.01 seconds after the main tone does, if depth = 0. This was because, when an object is in the extreme foreground, it shouldn't actually have an echo that sounds very far away. This timing prevents the signals from interfering, but they still overlap enough that to most people it would sound like one sound.
 
 ## Tone event array
-A global array of tone info objects (`toneEvents`) is populated during initialization and forms the basis of playback. The name maybe isn't the best, because these are *not* `Tone.Event` objects. It is so named because it is passed as the `events` array to the `Tone.Part` object, which schedules the tones.
-
-The objects in the array are defined as follows:
+Exactly the same as in the Thrown Ball *(this needs a better name)* prototype, but the names are a bit different:
 ```
 {
   "name" (string): name of the object (not currently used),
-  "tone"(Sampler): the main tone generator,
-  "echo" (Sampler): the echo tone generator,
-  "echoDelay" (number): number of seconds b/w start of main tone and start of echo tone,
+  "tone"(Sampler): the main tone generator (renamed from objTone),
+  "echo" (Sampler): the echo tone generator (renamed from stopTone),
+  "echoDelay" (number): number of seconds b/w start of main tone and start of echo tone (renamed from duration),
   "time" (TransportTime): start time of the main tone for this object
 }
 ```
 
 ## Timing playback
-Tones are played in the same order they are given in the json file.
-
-Once the tones and echoes are initialized, and the `toneEvents` array populated, another function is called that iterates over each object in that array and calculates the `time` for each one (see above). This is given by
-```math
-(0 \lor \text{[start time of previous tone]}) + \text{[echoDelay for this object]} + \text{ECHO\_DURATION} + \text{TONE\_SPACING}
-```
-where `ECHO_DURATION` and `TONE_SPACING` are global (easily configurable) variables. Their purpose is exactly what the name says.
+Exact same as Thrown Ball prototype.
 
 ## Handling user (keyboard) input
-There is one `EventListener` for the "keydown" event, which calls a `handleDown()` function. This function checks if the key pressed was `TOGGLE_PLAY`, and exits early if not. Then if the playback is already started, it stops it using `Tone.getTransport().toggle()`. This will not stop playback immediately (as mentioned in the Tone.js supplementary documentation `./tonejs.md`) but will stop at the end of the current tone (another TODO to make this better).
-
-Otherwise, it creates a (new every time) `Tone.Part` object which goes through every element in the `toneEvents` array (this is what it's for) and calls a callback (`playTone()`). The callback plays the main tone (`.tone`) for its set duration (`.echoDelay` or 0.4s whichever is the larger) at its set time (`.time`), then the echo tone (`.echo`) for `ECHO_DURATION` seconds at time `.time + .echoDelay`. By API specification, this callback must take a `time` argument and a `value` argument: however, `value` can be a dict as long as "time" is one of the keys. This is what I did here, to pass items of `toneEvents` as `value`.
-
-Once that's created, it calls `Tone.getTransport().start()` to start the scheduled playback.
+Exact same as Thrown Ball prototype.
 
 ## Limitations / Bugs
 A specific bug in this prototype is that if you keep playing/pausing, the tones get louder (not immediately but pretty quickly), to the point that after about 3 play/pauses it gets uncomfortably loud and the sound is distorted.
