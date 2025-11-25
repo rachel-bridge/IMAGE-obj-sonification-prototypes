@@ -83,11 +83,11 @@ A global array of tone info objects (`toneEvents`) is populated during initializ
 The objects in the array are defined as follows:
 ```
 {
-  "name": string, name of the object (not currently used);
-  "tone": Sampler, the main tone;
-  "echo": Sampler, the echo tone;
-  "echoDelay": number (seconds), num. seconds b/w start of main tone and start of echo tone;
-  "time": TransportTime, start time of the main tone;
+  "name" (string): name of the object (not currently used),
+  "tone"(Sampler): the main tone generator,
+  "echo" (Sampler): the echo tone generator,
+  "echoDelay" (number): number of seconds b/w start of main tone and start of echo tone,
+  "time" (TransportTime): start time of the main tone for this object
 }
 ```
 
