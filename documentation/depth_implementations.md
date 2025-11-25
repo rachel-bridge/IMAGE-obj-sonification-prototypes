@@ -4,9 +4,10 @@
 - IMAGE object detection pre-processor schema ([here](https://github.com/Shared-Reality-Lab/IMAGE-server/blob/2945b52da77bf74b1307e7e2286c6297ebef6157/preprocessors/object-detection.schema.json))
 - IMAGE depth map generator schema ([here](https://github.com/Shared-Reality-Lab/IMAGE-server/blob/2945b52da77bf74b1307e7e2286c6297ebef6157/preprocessors/depth-map-generator.schema.json))
 
+pes all involve adding depth information to 
 
 # General (all variations)
-As noted in more detail in the documentation for Tone.js (`./tonejs.md`), I have not figured out how to apply different effects to different calls on the same `ToneAudio` object (`Sampler`, `Player`, ...etc). Thus, even when the same sound is used for every object, a separate instance of the tone generator (probably a `Sampler`) was created for each one to allow for different effects (at minimum, different panning).
+At a basic level, these prototypes all involve adding depth information to the simple spatialized tones that currently represent objects detected in an image.
 
 ## Potential integration w/ IMAGE
 In order to (hopefully) make it easier to integrate into IMAGE, these prototypes all generate, edit, time, and play back the tones for all objects using a JSON file following an existing IMAGE schema. Specifically, the object detection schema (linked above). I haven't yet set this up to work with the [semantic segmentation schema](https://github.com/Shared-Reality-Lab/IMAGE-server/blob/2945b52da77bf74b1307e7e2286c6297ebef6157/preprocessors/segmentation.schema.json).
@@ -40,8 +41,19 @@ e.g. [YouTube tutorial](https://www.youtube.com/watch?v=cyv5-YLe4Qw) on this
 ## Limitations
 The main glaring limitation of all these prototypes is that the tones are not labelled. There are audio clips from an online free text-to-speech service that can be played in advance of tones, and there's space in the main config object (similar across all prototypes described here) for that info, it just hasn't been implemented yet.
 
+As noted in more detail in the documentation for Tone.js (`./tonejs.md`), I have not figured out how to apply different effects to different calls on the same `ToneAudio` object (`Sampler`, `Player`, ...etc). Thus, even when the same sound is used for every object, a separate instance of the tone generator (probably a `Sampler`) was created for each one to allow for different effects (at minimum, different panning).
 
-# "Thrown Ball" (idk what else to call it...)
+
+# Single Secondary Tone
+This section describes two prototypes that are very similar. The core idea is for each object in the image to be represented by
+1. a primary long tone whose duration maps to the depth (distance from viewer) of that object; and
+2. a secondary tone that marks the end of the duration, and may reinforce the "depth"
+
+The variations on this idea are:
+- "echo" prototype - `depth_map_designs/echo.js`: The secondary tone is a synthesized echo of the first one. It uses the same "base" sound as the primary tone. The secondary tone for different objects has different degrees of effects applied depending on depth.
+- "thrown ball" prototype - `depth_map_designs/thrown_ball.js`: The secondary tone is exclusively to mark the end of the primary tone. It uses a different "base" sound than the primary tone, but is exactly the same for every object.
+
+Below is the information that is the same for both variations.
 
 ## Configuration globals
 ... I should just make a config file for this lol. OK there are a few global variables, that are there to make them easy to tweak. These are
