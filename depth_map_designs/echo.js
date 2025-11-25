@@ -47,7 +47,6 @@ const response = await fetch(schema_url);
 const jsonData = await response.json(); //json blob from object detection
 
 generateTonesFromObjects(jsonData);
-setStartTimes();
 // ==========================
 
 
@@ -101,6 +100,9 @@ function generateTonesFromObjects(data) {
       time: 0 //set later! as in, literally the next thing...
     });
   }
+
+  // set correct times now that array is fully populated
+  setStartTimes();
 }
 
 // normalize from centroid x coord on [0, 1] to Tone.Panner input on [-1, 1]
