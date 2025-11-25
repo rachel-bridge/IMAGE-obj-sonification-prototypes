@@ -1,5 +1,5 @@
 # Intro
-**This doc covers usage of this prototype and design considerations. For documentation of the technical side of things, see `documentation/scan_implementation.md`.**
+**This doc covers usage of this prototype and design considerations. For documentation of the technical side of things, see `documentation/scan_technical.md`.**
 
 This design is meant to go alongside an alt-text description, like the spatialized audio in IMAGE as it exists at time of writing.
 
