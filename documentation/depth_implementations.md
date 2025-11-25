@@ -46,6 +46,16 @@ e.g. [YouTube tutorial](https://www.youtube.com/watch?v=cyv5-YLe4Qw) on this
 
 ## Single Echo (`echo.js`)
 
+### Configuration globals
+... I should just make a config file for this lol. OK there are a few global variables, that are there to make them easy to tweak. These are
+- `D_URL`: URL (assuming already inside the `audio_tracks/` folder) of the main tone base sound.
+- `schema_url`: URL of the JSON schema to build the sonification off of. In a real implementation, this would be removed.
+- `TOGGLE_PLAY`: name (in KeyboardEvents API) of the key that should toggle play/pause of the sonification. Set to spacebar (`" "`; yes, actually) by default bc that most intuitive to me.
+- `TONE_SPACING`: number of seconds (can be decimal) of dead space between the end of the echo of one tone and the start of the main tone of the next.
+- `ECHO_DURATION`: duration of all the echo sounds, in seconds.
+
+There's also a global `toneEvents` array, which is global because it needs to be instantiated at load time: if it's instantiated during user input handling, even if in a separate function call before the playback, the `Sample` buffers aren't loaded in time and it crashes. Haven't worked out a fix for that yet.
+
 ### Effects
 The main tone is passed through the **panner**, and then to output. The echo is passed in series through the **reverb**, **low pass filter**, **panner**, and finally to output.
 
