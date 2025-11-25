@@ -53,14 +53,34 @@ The main glaring limitation of all these prototypes is that the tones are not la
 
 There's also a global `toneEvents` array, which is global because it needs to be instantiated at load time: if it's instantiated during user input handling, even if in a separate function call before the playback, the `Sample` buffers aren't loaded in time and it crashes. Haven't worked out a fix for that yet.
 
+## On-load initialization
+At load, the fetch API is used to read the contents of the specified (above) JSON file. That is passed to a function that interprets it, and populates the `toneEvents` array with the primary (object/main tone) and secondary ("stop") tones and timing information.
 
+## Effects
+The main tone is passed through the **panner**, and then to output. The secondary ("stop") tone is passed in series through the **volume**, **panner**, and then to output.
 
+> [!CAUTION]
+> Passing the "stop" tone through the panner and *then* the volume editor does not work: volume gets skipped.
+
+### Panning
+For each object, the main and secondary tone are both panned to the same location.
+The x coordinate of the object centroid (from json def'n) is normalized to the [-1, 1] range (instead of [0, 1] original range).
+This value is passed as parameter to a `Tone.Panner` object. 
+
+### Volume
+A `Tone.Volume` object is used to lower the volume of the secondary "stop" tone, just because the stock sound I picked is a bit loud. It's lowered by 14 decibels (14dB). **If a different stock sound is picked, this should be adjusted or removed.**
+
+> [!NOTE]
+> This could be done with a single `Volume` instance that is connected to every "stop" tone using `send()`/`receive()` instead of `connect()`: good to look into.
 
 
 # Single Echo (`echo.js`)
 
 ## Configuration globals
 The global variables are identical to those in the "Thrown Ball" prototype (above), except that `STOP_DURATION` is renamed `ECHO_DURATION`. It refers to the same thing: the duration of the secondary tone.
+
+## On-load initialization
+Same as "Thrown Ball" prototype.
 
 ## Effects
 The main tone is passed through the **panner**, and then to output. The echo is passed in series through the **reverb**, **low pass filter**, **panner**, and finally to output.
