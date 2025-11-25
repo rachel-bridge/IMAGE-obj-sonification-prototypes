@@ -20,6 +20,8 @@ The parameters of effects are computed based on the json definition it receives,
 f(x) = c + \left(\frac{d-c}{b-a}\right) (x - a)
 ```
 
+The order of objects in that JSON file is the order they are played in.
+
 
 # "Thrown Ball" (idk what else to call it...)
 
@@ -45,6 +47,7 @@ e.g. [YouTube tutorial](https://www.youtube.com/watch?v=cyv5-YLe4Qw) on this
 ## Single Echo (`echo.js`)
 
 ### Effects
+The main tone is passed through the **panner**, and then to output. The echo is passed in series through the **reverb**, **low pass filter**, **panner**, and finally to output.
 
 #### Panning
 For each object, the original tone and its echo are both panned to the same location.
@@ -73,6 +76,29 @@ f(x) = \begin{cases}
 
 ### Echo delay time
 The amount of time before the echo sounds is calculated by normalizing the depth value to a different range, in seconds. The range [0.01, 3] was selected, where the echo begins 0.01 seconds after the main tone does, if depth = 0. This was because, when an object is in the extreme foreground, it shouldn't actually have an echo that sounds very far away. This timing prevents the signals from interfering, but they still overlap enough that to most people it would sound like one sound.
+
+### Tone event array
+A global array of tone info objects (`toneEvents`) is populated during initialization and forms the basis of playback. The name maybe isn't the best, because these are *not* `Tone.Event` objects. It is so named because it is passed as the `events` array to the `Tone.Part` object, which schedules the tones.
+
+The objects in the array are defined as follows:
+```
+{
+  "name": string, name of the object (not currently used);
+  "tone": Sampler, the main tone;
+  "echo": Sampler, the echo tone;
+  "echoDelay": number (seconds), num. seconds b/w start of main tone and start of echo tone;
+  "time": TransportTime, start time of the main tone;
+}
+```
+
+### Timing playback
+Tones are played in the same order they are given in the json file.
+
+Once the tones and echoes are initialized, and the `toneEvents` array populated, another function is called that iterates over each object in that array and calculates the `time` for each one (see above). This is given by
+```math
+(0 \or \text{[`time` of previous tone]}) + \text{echoDelay} + \text{ECHO_DURATION} + \text{TONE_SPACING}
+```
+where `ECHO_DURATION` and `TONE_SPACING` are global (easily configurable) variables. Their purpose is exactly what the name says.
 
 
 ## Multiple Echoes (`echo_multiple.js`) - superseded
