@@ -53,22 +53,14 @@ This value is passed as parameter to a `Tone.Panner` object.
 
 #### Reverb
 A reverb is applied to the echo tone of each object, with parameters based on the object's depth (from json def'n).
-The
+The depth value is converted to the decay time (in seconds) and the wet ratio ([0,1]), in both cases using the normalization equation defined at the top of this document. Decay time uses the range [0.5, 5], where decay = 0.5s when depth = 0. Wet ratio uses the range [0.5, 0.96], where wet = 0.5 when depth = 0.
+These values are passed as the `decay` and `wet` parameters to a `Tone.Reverb` object.
+These ranges were chosen by trial and error. For context: common values for reverb decay is between 1-3s, with 3s-5s if you're trying to make something sound far away. In that case, the "wet" ratio is often very extreme, as much as 0% dry 100% wet (many DAWs let you edit these indepently, not just as a ratio as in Tone.js). I didn't use `wet=1` because it didn't sound very good.
 
-    // set 2D pan using x coordinate of centroid
-    var panner = new Tone.Panner(normalizePanX(x));
-    // find the time between the intial tone and the echo
-    var delayTime = normalizeDepthToDelay(depth)
-    // create effects for the echo
-    var r_decay, r_wet = normalizeDepthToReverb(depth);
-    var reverb = new Tone.Reverb({
-      decay: r_decay,
-      wet: r_wet
-    });
-    var lowPassFilter = new Tone.Filter({
-      type: "lowpass",
-      frequency: normalizeDepthToFilter(depth)
-    });
+#### Low pass filter
+A low pass filter is applies to the echo tone of each object, with cutoff frequency based on the object's depth. The rolloff is always the same (12dB/octave, default).
+The depth value is put through a function that converts it to frequency in hertz (Hz). I used a completely arbitrary function that produced the results I wanted. The important thing is that the cutoff frequency drops off more sharply through the higher frequencies. The higher frequencies sound much closer together to the human ear, which was probably why it sounded like it wasn't getting "far away" fast enough with a linear function.
+![Graph of depth vs cutoff frequency, screenshotted from Desmos.com](https://www.desmos.com/calculator/an8sbeqc0i)
 
 
 ## Multiple Echoes (`echo_multiple.js`) - superseded
