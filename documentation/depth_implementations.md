@@ -59,6 +59,7 @@ These ranges were chosen by trial and error. For context: common values for reve
 
 #### Low pass filter
 A low pass filter is applies to the echo tone of each object, with cutoff frequency based on the object's depth. The rolloff is always the same (12dB/octave, default).
+The result is passed as the `frequency` parameter of a `Tone.Filter` object with `type="lowpass"`.
 The depth value is put through a function that converts it to frequency in hertz (Hz). I used a completely arbitrary function that produced the results I wanted. The important thing is that the cutoff frequency drops off more sharply through the higher frequencies. The higher frequencies sound much closer together to the human ear, which was probably why it sounded like it wasn't getting "far away" fast enough with a linear function.
 ```math
 f(x) = \begin{cases}
