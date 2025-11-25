@@ -165,6 +165,75 @@ A `Tone.Volume` object is used to lower the volume of the secondary "stop" tone,
 > This could be done with a single `Volume` instance that is connected to every "stop" tone using `send()`/`receive()` instead of `connect()`. I have no time right now though.
 
 
-# Multiple Echoes (`echo_multiple.js`) - superseded
+
+# OLD - Multiple Echoes (`echo_multiple.js`)
+This was the first draft of this idea, where depth of an object is communicated by a series of receding echoes. A more detailed discussion can be found in the design documentation for the depth map designs (`depth_design_usage.md`).
+
+The documentation here is going to be much worse because it's not as good an idea as those above and I am prioritizing brutally with the time I have! :D
+
+> [!CAUTION]
+> This prototype has been broken in a number of ways by changes while working on the other two prototypes (e.g. it imports json data as `DATA` global var from another file, which I deleted bc the fetch API was a better way to do it). This prototype is *very* much a first draft.
+
+## Configuration / Globals
+Many of the same globals as the other prototypes, but also lists of 4 increasingly intense variations for each type of effect. Also has the `toneEffects` array, but it's just an array of the `Sampler` objects and the other information needs to be added later before using it as the `Part.events` (`Sequence.events`, in this case - see below) array.
+
+## Initialization / Setup
+The difference between this and the previous prototypes is that instead of generating unique effects based on the depth of an object, the depth range ([0,1]) is divided into 5 subdivisions and for each effect, the intensity (version) of it is selected fromo the global list based on where the object depth falls in that. It's 5 subdivisons because one (extreme foreground) has no echo at all, so no effects are needed.
+
+e.g. If an object falls in subdivision 2, the echo will be send to delay at index 0, which gets sent through all the other effects (vol > reverb > EQ > output) with the objects at index 0. Then, it also gets sent through all of those but for the objects (delay, vol, reverb...) at index 1. Since each of these is sent to output, they all sound, and different effects get added to the different delays.
+
+**This is *not* a good way to do this**. It's a pain to deal with because things can get mixed up very easily, and a pain to schedule.
 
 ## Effects
+Panning is done the same way. 
+
+Low pass filter is clumsily implemented with a `Tone.EQ3` object, because at time of creation I hadn't found the `Filter` object.
+
+The effects used are: delay, volume, reverb, EQ (for low pass filter effect)
+
+The four options for each effect are as follows:
+```
+const delays = [
+  new Tone.Delay(0.7, MAX_DELAY),
+  new Tone.Delay(1.4, MAX_DELAY),
+  new Tone.Delay(2.1, MAX_DELAY),
+  new Tone.Delay(2.8, MAX_DELAY)
+];
+const vols = [
+  new Tone.Volume(-8),
+  new Tone.Volume(-10),
+  new Tone.Volume(-10),
+  new Tone.Volume(-11)
+]
+const reverbs = [
+  new Tone.Reverb({decay: 1.1, wet: 0.65}),
+  new Tone.Reverb({decay: 1.23, wet: 0.76}),
+  new Tone.Reverb({decay: 1.3, wet: 0.85}),
+  new Tone.Reverb({decay: 1.4, wet: 0.95})
+]
+const lowPassFilters = [
+  new Tone.EQ3({high: -14, highFrequency: 4000}),
+  new Tone.EQ3({high: -15, highFrequency: 1500}),
+  new Tone.EQ3({high: -16, highFrequency: 1000}),
+  new Tone.EQ3({high: -18, highFrequency: 600})
+]
+```
+
+Volume reduction is necessary because the `EQ3` object class does not do what I was looking for as well as `Filter`.
+
+### Delay
+In the other prototypes, a separate `Sampler` object is used for the secondary tone or echo. Here, instead, multiple delays are passed to the `Sampler` object for the primary tone.
+
+## Handling user (keyboard) input
+Very similar to other prototypes above, but uses a `Tone.Sequence` instead of a `Tone.Part` object for scheduling. Also, additional information like name, timing...etc is added at time of keydown handling, instead of during object construction.
+
+## Limitations
+Most or all of these I know how to fix / would now do differently, but have not gone back to fix because this prototype is not as good as the others in this document. It's mostly up for historical/process documentation.
+
+- No pausing
+- doesn't read the JSON file itself, outsources it to another file that no longer exists (that's what the `DATA` variable is): **this would a fatal exception if run!**
+- Also no tone labelling (names)
+- `toneEvents` array is initialized half during `Sampler` (tone) initialization and half during keydown handling: hadn't figured out how best to do this yet.
+- For adding the same effect object to multiple `Sampler` objects, I should have used `send()` and `receive()` with `Tone.Channel` objects. I did not know this existed at the time.
+- uses `Tone.Sequence` instead of `Tone.Part` to schedule the tones: this is a worse way to do it!
+- puts multiple delays on the main tone instead of using separate `Sampler` objects for the echoes: more complicated to time, pain the neck!
