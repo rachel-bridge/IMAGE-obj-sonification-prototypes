@@ -165,14 +165,10 @@ function handleDown(e) {
     Tone.getTransport().toggle();
   }
   else {
-    playAllTones();
+    // play all the tones in sequence, without narration so far
+    const tonePart = new Tone.Part(playTone, toneEvents).start(0);
+    Tone.getTransport().start();
   }
-}
-
-// play all the tones in sequence, without narration so far
-function playAllTones() {
-  const tonePart = new Tone.Part(playTone, toneEvents).start(0);
-  Tone.getTransport().start();
 }
 
 // the callback for the Tone.Part that plays all the tones
