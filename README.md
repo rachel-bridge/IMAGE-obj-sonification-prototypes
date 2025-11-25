@@ -108,3 +108,6 @@ Controls (repeated in instructions):
 - implement UI features for `scan_segmented`
 - `scan_continous` backwards playback start from the correct point in track
 - clean up `scan/scan_continuous.js`
+- the start/stop in "echo" prototype makes the tones a little louder every time you pause: 3 pauses in and it's so loud the noise is breaking. No *clue* why, gotta fix that.
+- read out names (label tones) in depth_map prototypes
+- work out timing so that `toneEvents` doesn't need to be global var - `echo.js`, `thrown_ball.js`

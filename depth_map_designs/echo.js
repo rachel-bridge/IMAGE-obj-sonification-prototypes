@@ -28,15 +28,15 @@ DEPENDENCIES:
 // FILE-GLOBAL VARS
 // sonification generation URLs
 const D_URL = 'clean_d_str_pick.mp3';
-// const schema_url = "json_schemas/city_street.json"
-const schema_url = "json_schemas/test.json"
+const schema_url = "json_schemas/city_street.json"
+// const schema_url = "json_schemas/test.json"
 
 // keybinds
 const TOGGLE_PLAY = ' '; //key to toggle play/pause
 
 // sonification timing parameters
 const TONE_SPACING = 0.5; //in seconds, shouldn't be less than max delay
-const ECHO_DURATION = 0.7; //in seconds, how long the echoes last
+const SECONDARY_DURATION = 0.7; //in seconds, how long the echoes last
 
 var toneEvents = []; //list of tone event objs used in playback, populate during loading
 
@@ -47,7 +47,6 @@ const response = await fetch(schema_url);
 const jsonData = await response.json(); //json blob from object detection
 
 generateTonesFromObjects(jsonData);
-setStartTimes();
 // ==========================
 
 
@@ -60,14 +59,14 @@ function generateTonesFromObjects(data) {
     var depth = obj.depth;
     // create the main tone and echo samplers: diff objs bc diff effects on them
     // NOTE: the main tone is identical for all: unique objs bc different panning
-    var newTone = new Tone.Sampler({
+    var primary = new Tone.Sampler({
       urls: {
           D1: D_URL, //not actually octave 1 but doesn't matter for this
       },
       baseUrl: "audio_tracks/",
       release: 0.3,
     });
-    var echo = new Tone.Sampler({
+    var secondary = new Tone.Sampler({
       urls: {
           D1: D_URL,
       },
@@ -76,9 +75,9 @@ function generateTonesFromObjects(data) {
     });
     // set 2D pan using x coordinate of centroid
     var panner = new Tone.Panner(normalizePanX(x));
-    // find the time between the intial tone and the echo
+    // find the time between the primary and secondary tones
     var delayTime = normalizeDepthToDelay(depth)
-    // create effects for the echo
+    // create effects for the secondary tone
     var r_decay, r_wet = normalizeDepthToReverb(depth);
     var reverb = new Tone.Reverb({
       decay: r_decay,
@@ -88,19 +87,22 @@ function generateTonesFromObjects(data) {
       type: "lowpass",
       frequency: normalizeDepthToFilter(depth)
     });
-    // apply those effects to the echo, and the panning to both
-    newTone.chain(panner, Tone.Destination);
-    echo.chain(reverb, lowPassFilter, panner, Tone.Destination)
+    // apply those effects, and the panning to both
+    primary.chain(panner, Tone.Destination);
+    secondary.chain(reverb, lowPassFilter, panner, Tone.Destination)
 
     // save essential info in an event array that can be passed to Part or Sequence
     toneEvents.push({
       name: objName,
-      tone: newTone,
-      echo: echo,
-      echoDelay: delayTime,
+      primaryTone: primary,
+      secondaryTone: secondary,
+      offset: delayTime,
       time: 0 //set later! as in, literally the next thing...
     });
   }
+
+  // set correct times now that array is fully populated
+  setStartTimes();
 }
 
 // normalize from centroid x coord on [0, 1] to Tone.Panner input on [-1, 1]
@@ -109,7 +111,7 @@ function normalizePanX(x) {
   return -1 + 2 * x;
 }
 
-// get echo delay time in seconds, from obj depth num [0,1]
+// get secondary tone delay time in seconds, from obj depth num [0,1]
 function normalizeDepthToDelay(depth) {
   // [0,1] -> [c,d] : f(t) = c + (d-c/1-0) * (t - 0)
   var delay_min = 0.01; //seconds when depth = 0
@@ -136,19 +138,19 @@ function normalizeDepthToFilter(depth) {
   var freq_min = 950; //Hz when depth = 0
   var freq = freq_min + Math.pow((-9 * depth + 9.5), 3.5);
   // ^sets max cutoff ~3600, but want no discernible EQ on extremely close objs
-  if (depth > 0.95) {
+  if (depth < 0.05) {
     freq = 6000
   }
   return freq;
 }
 
 // set the start times for each tone in the toneEvents array
-// increase next start time by (this one + its length + echo duration + spacing)
+// increase next start time by (this one + its length + secondary tone duration + spacing)
 function setStartTimes() {
   var curTime = 0;
   for (var i = 0; i < toneEvents.length; i++) {
     toneEvents[i].time = curTime;
-    curTime = curTime + toneEvents[i].echoDelay + ECHO_DURATION + TONE_SPACING;
+    curTime = curTime + toneEvents[i].offset + SECONDARY_DURATION + TONE_SPACING;
   }
 }
 
@@ -163,49 +165,41 @@ function handleDown(e) {
   }
   if (Tone.getTransport().state == "started") {
     Tone.getTransport().toggle();
-    // NOTE: this doesn't stop the playback once it's started, but
-    // it at least lets you play it again.
-    // TODO: make it stop playback once it's started
   }
   else {
-    playAllTones();
-    // playbackTester();
+    // play all the tones in sequence, without narration so far
+    const tonePart = new Tone.Part(playTone, toneEvents).start(0);
+    Tone.getTransport().start();
   }
-}
-
-// play all the tones in sequence, without narration so far
-function playAllTones() {
-  const tonePart = new Tone.Part(playTone, toneEvents).start(0);
-  Tone.getTransport().start();
 }
 
 // the callback for the Tone.Part that plays all the tones
 // args MUST be (time, value) (API requirement)
 function playTone(time, value) {
   // value contains `name` for the 'captioning', not implemented yet
-  var duration = value.echoDelay < 0.4 ? 0.4 : value.echoDelay;
-  value.tone.triggerAttackRelease("D1", duration, time);
-  value.echo.triggerAttackRelease("D1", ECHO_DURATION, time + value.echoDelay);
+  var duration = value.offset < 0.4 ? 0.4 : value.offset;
+  value.primaryTone.triggerAttackRelease("D1", duration, time);
+  value.secondaryTone.triggerAttackRelease("D1", SECONDARY_DURATION, time + value.offset);
 }
 
 
 // TEST/MISC
 // this holds my experimental messing around, you may disregard :)
-function playbackTester() {
-  const basicTone = new Tone.Sampler({
-    urls: {
-        D1: D_URL,
-    },
-    baseUrl: "audio_tracks/",
-    release: 0.3,
-  }).toDestination();
-  // const freeverb = new Tone.Freeverb().toDestination();
-  // freeverb.dampening = 1000;
-  // basicTone.connect(freeverb);
-  // basicTone.triggerAttackRelease("D1", 0.9);
+// function playbackTester() {
+//   const basicTone = new Tone.Sampler({
+//     urls: {
+//         D1: D_URL,
+//     },
+//     baseUrl: "audio_tracks/",
+//     release: 0.3,
+//   }).toDestination();
+//   // const freeverb = new Tone.Freeverb().toDestination();
+//   // freeverb.dampening = 1000;
+//   // basicTone.connect(freeverb);
+//   // basicTone.triggerAttackRelease("D1", 0.9);
 
-  // const vol1 = new Tone.Volume(-20).toDestination();
-  // const osc = new Tone.Oscillator().connect(vol1).start(0);
-  // console.log(tones)
-  // tones[1].triggerAttackRelease("D1", 0.8)
-}
+//   // const vol1 = new Tone.Volume(-20).toDestination();
+//   // const osc = new Tone.Oscillator().connect(vol1).start(0);
+//   // console.log(tones)
+//   // tones[1].triggerAttackRelease("D1", 0.8)
+// }

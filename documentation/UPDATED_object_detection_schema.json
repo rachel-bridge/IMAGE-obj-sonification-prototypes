@@ -49,6 +49,12 @@
           "type": "number",
           "minimum": 0,
           "maximum": 1
+        },
+        "depth": {
+          "description": "Normalized 2D representation of Depth from 0 to 1, from depth map generator. Value of 0 is closest to the camera, 1 is farthest away. Average value of pixels inside object outline.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
         }
       },
       "required": [ "ID", "type", "dimensions", "confidence" ]

@@ -1,12 +1,9 @@
-// JS FOR THE DEPTH-MAP ECHO IDEA
+// JS FOR THE INITIAL DRAFT OF DEPTH-MAP ECHO IDEA
 
 /*
 IDEA:
 Like the depth muffle idea, but the first tone is always clear and just has
 a series of fading echoes indicating distance.
-
-ASSUMPTIONS:
-- 
 */
 
 // FILE-GLOBAL VARS
@@ -48,10 +45,6 @@ const lowPassFilters = [
   new Tone.EQ3({high: -16, highFrequency: 1000}),
   new Tone.EQ3({high: -18, highFrequency: 600})
 ]
-// OK this might have been doing something but I'm really not sure...
-// for (var i = 0; i < 4; i++) {
-//   reverbs[i].chain(lowPassFilters[i], Tone.Destination);
-// }
 
 
 // SETUP OF TONES
@@ -87,7 +80,7 @@ function normalizePanX(x) {
 }
 
 // get the number of echoes from the depth number
-// divide into 4 "quadrants" w/ the nearest 0.05 reserved for "extreme foreground" (no echo)
+// divide into 4 "quartiles" w/ the nearest 0.05 reserved for "extreme foreground" (no echo)
 function normalizeDepthToEchoes(depth) {
   if (depth <= 0.24) { //[0, 0.24]
     return 4;
@@ -107,19 +100,14 @@ function normalizeDepthToEchoes(depth) {
 }
 
 
-// KEYBINDINGS
+// KEYBINDINGS / PLAYBACK
 document.addEventListener('keydown', handleDown);
-document.addEventListener('keyup', handleUp);
 
 function handleDown(e) {
   if (e.key != TOGGLE_PLAY) {
     return;
   }
   playAllTones();
-}
-
-function handleUp(e) {
-  return;
 }
 
 // helper to play all the tones in sequence, without narration so far
@@ -151,24 +139,26 @@ function playTone(time, value) {
   value.tone.triggerAttackRelease("D1", 0.8, time);
 }
 
-// moved all the messing around from playTone() to here
-// because the name `playTone()` made more sense to use elsewhere lol
-function tester() {
-  // const freeverb = new Tone.Freeverb().toDestination();
-  // freeverb.dampening = 1000;
-  // basicTone.connect(freeverb);
-  // basicTone.triggerAttackRelease("D1", 0.9);
 
-  // connect the signal to both the delay and the destination
-  // delay_echo1.chain(vol_echo1, Tone.Destination);
-  // basicTone.chain(delays[0], vols[0], Tone.Destination);
-  // basicTone.chain(delays[1], vols[1], Tone.Destination);
-  // basicTone.chain(delays[2], vols[2], Tone.Destination);
-  // start and stop the pulse
-  // basicTone.triggerAttackRelease("D1", 0.9);
+// TEST / MISC
+// all my messing around goes here, so it can be easily tested by swtiching
+// the function call in `handleDown()`
+// function tester() {
+//   // const freeverb = new Tone.Freeverb().toDestination();
+//   // freeverb.dampening = 1000;
+//   // basicTone.connect(freeverb);
+//   // basicTone.triggerAttackRelease("D1", 0.9);
 
-  // const vol1 = new Tone.Volume(-20).toDestination();
-  // const osc = new Tone.Oscillator().connect(vol1).start(0);
-  console.log(toneEvents)
-  toneEvents[1].triggerAttackRelease("D1", 0.8)
-}
+//   // connect the signal to both the delay and the destination
+//   // delay_echo1.chain(vol_echo1, Tone.Destination);
+//   // basicTone.chain(delays[0], vols[0], Tone.Destination);
+//   // basicTone.chain(delays[1], vols[1], Tone.Destination);
+//   // basicTone.chain(delays[2], vols[2], Tone.Destination);
+//   // start and stop the pulse
+//   // basicTone.triggerAttackRelease("D1", 0.9);
+
+//   // const vol1 = new Tone.Volume(-20).toDestination();
+//   // const osc = new Tone.Oscillator().connect(vol1).start(0);
+//   console.log(toneEvents)
+//   toneEvents[1].triggerAttackRelease("D1", 0.8)
+// }

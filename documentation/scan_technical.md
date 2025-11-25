@@ -5,6 +5,8 @@ This prototype just plays those audio clips (one per region) simultaeously and a
 
 For how to go about editing the sounds programmatically, the implementation of "echo" should give some ideas.
 
+These editions of these prototypes have not implemented the more complex UI features implemented in the coninuous sound version: playing individual sounds on their own, and selecting specific regions to play in the sonification.
+
 
 # Dependencies
 - Tone.js v15.3.5 ([here](https://tonejs.github.io/))
@@ -12,7 +14,6 @@ For how to go about editing the sounds programmatically, the implementation of "
 
 
 # Segmented
-This prototype has not implemented the more complex UI features implemented in the coninuous sound version: playing individual sounds on their own, and selecting specific regions to play in the sonification.
 
 ## 1. Global variables
 There are a lot of global variables and I'd like to get rid of some of them, but haven't had time yet.
@@ -57,6 +58,8 @@ The program starts on segment 0. The segment number is incremented between the u
 
 Likewise, hitting `TRIGGER_UP` when you're already at the end just replays the "end" sound.
 
+If it's set to loop, hitting `TRIGGER_UP` mid-sound will not jump straight to the next segement, but instead finish the current segment, seamlessly transition into the next, and then start looping that one. This doesn't happen for `TRIGGER_DOWN`; it just jumps immediately to the start of the previous segment. This was not intentional and is probably a consequence of how the playback is scheduled, but it seemed cool so I left it.
+
 ### 3.2. Handling user (keyboard) input
 There is an `EventListener` for "keydown" events of any kind, which immediately calls the function `handleDown()`. *NOTE: there is the outline to easily implement a response when the user lifts the key, but it's not currently used. Since we only care about individual keypresses here, keydown and keyup might as well be the same event.*
 
@@ -93,7 +96,10 @@ With a Tone.js `Player` object, calling `Player.reverse()` reverses the associat
 **The obvious way to fix this is to manually set the time** (either using the `offset` parameter in `Tone.Player.start()`, or the `TransportTime` parameter in `Tone.getTransport().start()`). I was partway through fixing this before I abandoned it in favour of the (more easily-implemented) segmented idea.
 
 ## Handling user (keyboard) input
-There are two EventListeners: one for "keydown" and one for "keyup" events, because 
+There are two EventListeners: one for "keydown" and one for "keyup" events, because this version should start playback on keydown and stop it on keyup.
+
+### Keydown
+On a key other than `TRIGGER_UP` or `TRIGGER_DOWN`, exit early (ignore). On "repeat" keys call `Tone.getTransport().stop()` if the `TransportTime` is greater than or equal to the duration of the sonification (**NOTE: I don't think this is effective**), else return early (ignore). Play
 
 
 # User Interface
