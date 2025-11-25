@@ -6,6 +6,8 @@
 
 pes all involve adding depth information to 
 
+
+
 # General (all variations)
 At a basic level, these prototypes all involve adding depth information to the simple spatialized tones that currently represent objects detected in an image.
 
@@ -44,7 +46,8 @@ The main glaring limitation of all these prototypes is that the tones are not la
 As noted in more detail in the documentation for Tone.js (`./tonejs.md`), I have not figured out how to apply different effects to different calls on the same `ToneAudio` object (`Sampler`, `Player`, ...etc). Thus, even when the same sound is used for every object, a separate instance of the tone generator (probably a `Sampler`) was created for each one to allow for different effects (at minimum, different panning).
 
 
-# Single Secondary Tone
+
+# Single Secondary Tone - Prototypes
 This section describes two prototypes that are very similar. The core idea is for each object in the image to be represented by
 1. a primary long tone whose duration maps to the depth (distance from viewer) of that object; and
 2. a secondary tone that marks the end of the duration, and may reinforce the "depth"
@@ -53,10 +56,8 @@ The variations on this idea are:
 - "echo" prototype - `depth_map_designs/echo.js`: The secondary tone is a synthesized echo of the first one. It uses the same "base" sound as the primary tone. The secondary tone for different objects has different degrees of effects applied depending on depth.
 - "thrown ball" prototype - `depth_map_designs/thrown_ball.js`: The secondary tone is exclusively to mark the end of the primary tone. It uses a different "base" sound than the primary tone, but is exactly the same for every object.
 
-Below is the information that is the same for both variations.
-
-## Configuration globals
-... I should just make a config file for this lol. OK there are a few global variables, that are there to make them easy to tweak. These are
+## Configuration / Globals
+There are a few global variables for parameters that should be easy to change. These are:
 - `D_URL`: URL (assuming already inside the `audio_tracks/` folder) of the object tone base sound.
 - `schema_url`: URL of the JSON schema to build the sonification off of. In a real implementation, this would be removed.
 - `TOGGLE_PLAY`: name (in KeyboardEvents API) of the key that should toggle play/pause of the sonification. Set to spacebar (`" "`; yes, actually) by default bc that most intuitive to me.
@@ -65,27 +66,7 @@ Below is the information that is the same for both variations.
 
 There's also a global `toneEvents` array, which is global because it needs to be instantiated at load time: if it's instantiated during user input handling, even if in a separate function call before the playback, the `Sample` buffers aren't loaded in time and it crashes. Haven't worked out a fix for that yet.
 
-## On-load initialization
-At load, the fetch API is used to read the contents of the specified (above) JSON file. That is passed to a function that interprets it, and populates the `toneEvents` array with the primary (object/main tone) and secondary ("stop") tones and timing information.
-
-## Effects
-The main tone is passed through the **panner**, and then to output. The secondary ("stop") tone is passed in series through the **volume**, **panner**, and then to output.
-
-> [!WARNING]
-> Passing the "stop" tone through the panner and *then* the volume editor does not work: volume gets skipped.
-
-### Panning
-For each object, the main and secondary tone are both panned to the same location.
-The x coordinate of the object centroid (from json def'n) is normalized to the [-1, 1] range (instead of [0, 1] original range).
-This value is passed as parameter to a `Tone.Panner` object. 
-
-### Volume
-A `Tone.Volume` object is used to lower the volume of the secondary "stop" tone, just because the stock sound I picked is a bit loud. It's lowered by 14 decibels (14dB). **If a different stock sound is picked, this should be adjusted or removed.**
-
-> [!NOTE]
-> This could be done with a single `Volume` instance that is connected to every "stop" tone using `send()`/`receive()` instead of `connect()`. I have no time right now though.
-
-## Tone event array
+### Tone event array
 A global array of tone info objects (`toneEvents`) is populated during initialization and forms the basis of playback. The name maybe isn't the best, because these are *not* `Tone.Event` objects. It is so named because it is passed as the `events` array to the `Tone.Part` object, which schedules the tones.
 
 The objects in the array are defined as follows:
@@ -99,7 +80,10 @@ The objects in the array are defined as follows:
 }
 ```
 
-## Timing playback
+## On-load initialization
+At load, the fetch API is used to read the contents of the specified (above) JSON file. That is passed to a function that interprets it, and populates the `toneEvents` array with the primary (object/main tone) and secondary ("stop") tones and timing information.
+
+## Timing the playback
 Tones are played in the same order they are given in the json file.
 
 Once the tones and echoes are initialized, and the `toneEvents` array populated, another function is called that iterates over each object in that array and calculates the `time` for each one (see above). This is given by
@@ -120,32 +104,38 @@ By API specification, this callback must take a `time` argument and a `value` ar
 
 Once that's created, it calls `Tone.getTransport().start()` to start the scheduled playback.
 
+## Calculating duration
+The duration of the primary tone is also the time between the start of the primary and secondary tones.
 
-# Single Echo (`echo.js`)
+It's calculated by normalizing the depth value to the range [0.01, 3], where the secondary tone plays 0.01 seconds after the primary tone when depth = 0. That range was selected because an object in the extreme foreground shouldn't really have an "echo" of any kind. An offset of 0.01 seconds is enough that the signals don't interfere with one another, while still overlapping enough that to most people it seems like one sound.
 
-## Configuration globals
-The global variables are identical to those in the "Thrown Ball" prototype (above), except that `STOP_DURATION` is renamed `ECHO_DURATION`. It refers to the same thing: the duration of the secondary tone.
+## Limitations / Bugs
+A specific bug in this prototype is that if you keep playing/pausing, the tones get louder (not immediately but pretty quickly), to the point that after about 3 play/pauses it gets uncomfortably loud and the sound is distorted.
 
-## On-load initialization
-Same as "Thrown Ball" prototype.
+I have absolutely no idea why this is, and have not had the time to look into it (sorry).
 
 ## Effects
+Different effects are applied in the two variations.
+
+### Panning - both
+Panning is applied and calculated the same way in both variations.
+
+For each object, the main and secondary tone are both panned to the same location.
+The x coordinate of the object centroid (from json def'n) is normalized to the [-1, 1] range (instead of [0, 1] original range).
+This value is passed as parameter to a `Tone.Panner` object. 
+
+### "Echo" Effects
 The main tone is passed through the **panner**, and then to output. The echo is passed in series through the **reverb**, **low pass filter**, **panner**, and finally to output.
 
 If you want to change any of these parameters, you can generally change the normalized min and max and see what that does to it, and go from there.
 
-### Panning
-For each object, the original tone and its echo are both panned to the same location.
-The x coordinate of the object centroid (from json def'n) is normalized to the [-1, 1] range (instead of [0, 1] original range).
-This value is passed as parameter to a `Tone.Panner` object. 
-
-### Reverb
+#### Reverb
 A reverb is applied to the echo tone of each object, with parameters based on the object's depth (from json def'n).
 The depth value is converted to the decay time (in seconds) and the wet ratio ([0,1]), in both cases using the normalization equation defined at the top of this document. Decay time uses the range [0.5, 5], where decay = 0.5s when depth = 0. Wet ratio uses the range [0.5, 0.96], where wet = 0.5 when depth = 0.
 These values are passed as the `decay` and `wet` parameters to a `Tone.Reverb` object.
 These ranges were chosen by trial and error. For context: common values for reverb decay is between 1-3s, with 3s-5s if you're trying to make something sound far away. In that case, the "wet" ratio is often very extreme, as much as 0% dry 100% wet (many DAWs let you edit these indepently, not just as a ratio as in Tone.js). I didn't use `wet=1` because it didn't sound very good.
 
-### Low pass filter
+#### Low pass filter
 A low pass filter is applies to the echo tone of each object, with cutoff frequency based on the object's depth. The rolloff is always the same (12dB/octave, default).
 The result is passed as the `frequency` parameter of a `Tone.Filter` object with `type="lowpass"`.
 The depth value is put through a function that converts it to frequency in hertz (Hz). I used a completely arbitrary function that produced the results I wanted. The important thing is that the cutoff frequency drops off more sharply through the higher frequencies. The higher frequencies sound much closer together to the human ear, which was probably why it sounded like it wasn't getting "far away" fast enough with a linear function. There's a floor of 950Hz, which was arbitrarily chosen as the lowest the cutoff frequency could go, based on trial and error.
@@ -159,31 +149,17 @@ f(x) = \begin{cases}
     <img src="cutoff_freq_curve-desmos-pw.png" height="500" alt="Graph of depth vs cutoff frequency, screenshotted from Desmos.com">
 </div>
 
-## Echo delay time
-The amount of time before the echo sounds is calculated by normalizing the depth value to a different range, in seconds. The range [0.01, 3] was selected, where the echo begins 0.01 seconds after the main tone does, if depth = 0. This was because, when an object is in the extreme foreground, it shouldn't actually have an echo that sounds very far away. This timing prevents the signals from interfering, but they still overlap enough that to most people it would sound like one sound.
+### "Thrown ball" Effects
+The main tone is passed through the **panner**, and then to output. The secondary ("stop") tone is passed in series through the **volume**, **panner**, and then to output.
 
-## Tone event array
-Exactly the same as in the Thrown Ball *(this needs a better name)* prototype, but the names are a bit different:
-```
-{
-  "name" (string): name of the object (not currently used),
-  "tone"(Sampler): the main tone generator (renamed from objTone),
-  "echo" (Sampler): the echo tone generator (renamed from stopTone),
-  "echoDelay" (number): number of seconds b/w start of main tone and start of echo tone (renamed from duration),
-  "time" (TransportTime): start time of the main tone for this object
-}
-```
+> [!WARNING]
+> Passing the "stop" tone through the panner and *then* the volume editor does not work: volume gets skipped.
 
-## Timing playback
-Exact same as Thrown Ball prototype.
+#### Volume
+A `Tone.Volume` object is used to lower the volume of the secondary "stop" tone, just because the stock sound I picked is a bit loud. It's lowered by 14 decibels (14dB). **If a different stock sound is picked, this should be adjusted or removed.**
 
-## Handling user (keyboard) input
-Exact same as Thrown Ball prototype.
-
-## Limitations / Bugs
-A specific bug in this prototype is that if you keep playing/pausing, the tones get louder (not immediately but pretty quickly), to the point that after about 3 play/pauses it gets uncomfortably loud and the sound is distorted.
-
-I have absolutely no idea why this is, and have not had the time to look into it (sorry).
+> [!NOTE]
+> This could be done with a single `Volume` instance that is connected to every "stop" tone using `send()`/`receive()` instead of `connect()`. I have no time right now though.
 
 
 # Multiple Echoes (`echo_multiple.js`) - superseded
