@@ -73,6 +73,36 @@ A `Tone.Volume` object is used to lower the volume of the secondary "stop" tone,
 > [!NOTE]
 > This could be done with a single `Volume` instance that is connected to every "stop" tone using `send()`/`receive()` instead of `connect()`: good to look into.
 
+## Tone event array
+A global array of tone info objects (`toneEvents`) is populated during initialization and forms the basis of playback. The name maybe isn't the best, because these are *not* `Tone.Event` objects. It is so named because it is passed as the `events` array to the `Tone.Part` object, which schedules the tones.
+
+The objects in the array are defined as follows:
+```
+{
+  "name" (string): name of the object (not currently used),
+  "objTone"(Sampler): the main tone generator,
+  "stopTone" (Sampler): the echo tone generator,
+  "duration" (number): number of seconds b/w start of main tone and start of echo tone,
+  "time" (TransportTime): start time of the main tone for this object
+}
+```
+
+## Timing playback
+Tones are played in the same order they are given in the json file.
+
+Once the tones and echoes are initialized, and the `toneEvents` array populated, another function is called that iterates over each object in that array and calculates the `time` for each one (see above). This is given by
+```math
+(0 \lor \text{[start time of previous tone]}) + \text{[duration for this object]} + \text{ECHO\_DURATION} + \text{TONE\_SPACING}
+```
+where `STOP_DURATION` and `TONE_SPACING` are global (easily configurable) variables. Their purpose is exactly what the name says.
+
+## Handling user (keyboard) input
+There is one `EventListener` for the "keydown" event, which calls a `handleDown()` function. This function checks if the key pressed was `TOGGLE_PLAY`, and exits early if not. Then if the playback is already started, it stops it using `Tone.getTransport().toggle()`. This will not stop playback immediately (as mentioned in the Tone.js supplementary documentation `./tonejs.md`) but will stop at the end of the current tone (another TODO to make this better).
+
+Otherwise, it creates a (new every time) `Tone.Part` object which goes through every element in the `toneEvents` array (this is what it's for) and calls a callback (`playTone()`). The callback plays the main tone (`.tone`) for its set duration (`.duration` or 0.4s whichever is the larger) at its set time (`.time`), then the stop tone (`.stopTone`) for `STOP_DURATION` seconds at time `.time + .duration`. By API specification, this callback must take a `time` argument and a `value` argument: however, `value` can be a dict as long as "time" is one of the keys. This is what I did here, to pass items of `toneEvents` as `value`.
+
+Once that's created, it calls `Tone.getTransport().start()` to start the scheduled playback.
+
 
 # Single Echo (`echo.js`)
 
