@@ -136,7 +136,7 @@ function normalizeDepthToFilter(depth) {
   var freq_min = 950; //Hz when depth = 0
   var freq = freq_min + Math.pow((-9 * depth + 9.5), 3.5);
   // ^sets max cutoff ~3600, but want no discernible EQ on extremely close objs
-  if (depth > 0.95) {
+  if (depth < 0.05) {
     freq = 6000
   }
   return freq;
