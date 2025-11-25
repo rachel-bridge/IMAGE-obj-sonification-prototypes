@@ -26,7 +26,7 @@ const TOGGLE_PLAY = ' '; //key to toggle play/pause
 
 // sonification timing parameters
 const TONE_SPACING = 0.5; //in seconds, time between end of one tone and start of next
-const STOP_DURATION = 0.3; //in seconds, how long the "stop" tone lasts
+const STOP_DURATION = 0.3; //in seconds, how long the secondary tone lasts
 
 var toneEvents = []; //list of tone event objs used in playback, populate during loading
 
@@ -48,34 +48,34 @@ function generateTonesFromObjects(data) {
     var x = obj.centroid[0];
     var depth = obj.depth;
   
-    // create the main tone and the panned "stop" tone
+    // create the main tone and secondary tones
     // NOTE: both are the same sound for all objs, multiple instances for unique panning
-    var objTone = new Tone.Sampler(
+    var primary = new Tone.Sampler(
       { D1: D_URL }, //not actually octave 1 but doesn't matter for this
       {
         baseUrl: "audio_tracks/",
         release: 0.3,
       }
     );
-    // stop tone doesn't need to be Sampler, but easier if they're the same.
-    // its pitch name is totally meaningless, just use same one as object tone
-    var stopTone = new Tone.Sampler({
+    // secondary tone doesn't need to be Sampler, just easier if they're the same.
+    // its pitch name is totally meaningless, just use same one as primary tone
+    var secondary = new Tone.Sampler({
         D1: "audio_tracks/tennis_ball_hit.mp3",
     });
     // set 2D pan using x coordinate of centroid
     var panner = new Tone.Panner(normalizePanX(x));
-    // the "stop" tone I picked is pretty loud, bring it down to pull focus away
+    // the secondary ("stop") tone I picked is pretty loud, bring it down to pull focus away
     var volume = new Tone.Volume(-14)
     // apply those effects to the echo, and the panning to both
-    objTone.chain(panner, Tone.Destination);
-    stopTone.chain(volume, panner, Tone.Destination);
+    primary.chain(panner, Tone.Destination);
+    secondary.chain(volume, panner, Tone.Destination);
   
     // save essential info in an event array that can be passed to Part or Sequence
     toneEvents.push({
       name: objName,
-      objTone: objTone,
-      stopTone: stopTone,
-      duration: normalizeDepthToTime(depth),
+      primaryTone: primary,
+      secondaryTone: secondary,
+      offset: normalizeDepthToTime(depth),
       time: 0 //set later! as in, literally the next thing...
     });
   }
@@ -90,7 +90,7 @@ function normalizePanX(x) {
   return -1 + 2 * x;
 }
 
-// get duration of object tone in seconds, from obj depth num [0,1]
+// get offset of secondary tone start time, in secs, from obj depth num [0,1]
 function normalizeDepthToTime(depth) {
   // [0,1] -> [c,d] : f(t) = c + (d-c/1-0) * (t - 0)
   var delay_min = 0.3; //seconds when depth = 0
@@ -99,9 +99,9 @@ function normalizeDepthToTime(depth) {
 }
 
 // LEAVING THIS IN CASE IT BECOMES USEFUL
-// // get volume reduction of "stop" tone in decibels, from depth [0,1]
-// // NOTE: this is not meant to be meaningful, but rather to blend the "stop"
-// //       tone into the end of the object tone as it decays, and avoid confusion
+// // get volume reduction of secondary tone in decibels, from depth [0,1]
+// // NOTE: this is not meant to be meaningful, but rather to blend the secondary
+// //       tone into the end of the primary tone as it decays, and avoid confusion
 // // NOTE: the volume is reduced at baseline bc the stock tone is pretty loud
 // function normalizeDepthToVolume(depth) {
 //   var reduce_min = -9; //decibel change when depth = 0 (min)
@@ -110,12 +110,12 @@ function normalizeDepthToTime(depth) {
 // }
 
 // set the start times for each tone in the toneEvents array
-// increase next start time by (this one + its length + echo duration + spacing)
+// increase next start time by (this one + its length + secondary tone duration + spacing)
 function setStartTimes() {
   var curTime = 0;
   for (var i = 0; i < toneEvents.length; i++) {
     toneEvents[i].time = curTime; //0 when i = 0
-    curTime = curTime + toneEvents[i].duration + STOP_DURATION + TONE_SPACING;
+    curTime = curTime + toneEvents[i].offset + STOP_DURATION + TONE_SPACING;
   }
 }
 
@@ -142,8 +142,8 @@ function handleDown(e) {
 // args MUST be (time, value) (API requirement)
 function playTone(time, value) {
   // value contains `name` for the 'captioning', not implemented yet
-  value.objTone.triggerAttackRelease("D1", value.duration, time);
-  value.stopTone.triggerAttackRelease("D1", STOP_DURATION, time + value.duration);
+  value.primaryTone.triggerAttackRelease("D1", value.offset, time);
+  value.secondaryTone.triggerAttackRelease("D1", STOP_DURATION, time + value.offset);
 }
 
 

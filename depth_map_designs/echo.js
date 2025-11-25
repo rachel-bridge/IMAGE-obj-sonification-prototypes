@@ -59,14 +59,14 @@ function generateTonesFromObjects(data) {
     var depth = obj.depth;
     // create the main tone and echo samplers: diff objs bc diff effects on them
     // NOTE: the main tone is identical for all: unique objs bc different panning
-    var newTone = new Tone.Sampler({
+    var primary = new Tone.Sampler({
       urls: {
           D1: D_URL, //not actually octave 1 but doesn't matter for this
       },
       baseUrl: "audio_tracks/",
       release: 0.3,
     });
-    var echo = new Tone.Sampler({
+    var secondary = new Tone.Sampler({
       urls: {
           D1: D_URL,
       },
@@ -75,9 +75,9 @@ function generateTonesFromObjects(data) {
     });
     // set 2D pan using x coordinate of centroid
     var panner = new Tone.Panner(normalizePanX(x));
-    // find the time between the intial tone and the echo
+    // find the time between the primary and secondary tones
     var delayTime = normalizeDepthToDelay(depth)
-    // create effects for the echo
+    // create effects for the secondary tone
     var r_decay, r_wet = normalizeDepthToReverb(depth);
     var reverb = new Tone.Reverb({
       decay: r_decay,
@@ -87,16 +87,16 @@ function generateTonesFromObjects(data) {
       type: "lowpass",
       frequency: normalizeDepthToFilter(depth)
     });
-    // apply those effects to the echo, and the panning to both
-    newTone.chain(panner, Tone.Destination);
-    echo.chain(reverb, lowPassFilter, panner, Tone.Destination)
+    // apply those effects, and the panning to both
+    primary.chain(panner, Tone.Destination);
+    secondary.chain(reverb, lowPassFilter, panner, Tone.Destination)
 
     // save essential info in an event array that can be passed to Part or Sequence
     toneEvents.push({
       name: objName,
-      tone: newTone,
-      echo: echo,
-      echoDelay: delayTime,
+      primaryTone: primary,
+      secondaryTone: secondary,
+      offset: delayTime,
       time: 0 //set later! as in, literally the next thing...
     });
   }
@@ -111,7 +111,7 @@ function normalizePanX(x) {
   return -1 + 2 * x;
 }
 
-// get echo delay time in seconds, from obj depth num [0,1]
+// get secondary tone delay time in seconds, from obj depth num [0,1]
 function normalizeDepthToDelay(depth) {
   // [0,1] -> [c,d] : f(t) = c + (d-c/1-0) * (t - 0)
   var delay_min = 0.01; //seconds when depth = 0
@@ -145,12 +145,12 @@ function normalizeDepthToFilter(depth) {
 }
 
 // set the start times for each tone in the toneEvents array
-// increase next start time by (this one + its length + echo duration + spacing)
+// increase next start time by (this one + its length + secondary tone duration + spacing)
 function setStartTimes() {
   var curTime = 0;
   for (var i = 0; i < toneEvents.length; i++) {
     toneEvents[i].time = curTime;
-    curTime = curTime + toneEvents[i].echoDelay + ECHO_DURATION + TONE_SPACING;
+    curTime = curTime + toneEvents[i].offset + ECHO_DURATION + TONE_SPACING;
   }
 }
 
@@ -177,9 +177,9 @@ function handleDown(e) {
 // args MUST be (time, value) (API requirement)
 function playTone(time, value) {
   // value contains `name` for the 'captioning', not implemented yet
-  var duration = value.echoDelay < 0.4 ? 0.4 : value.echoDelay;
-  value.tone.triggerAttackRelease("D1", duration, time);
-  value.echo.triggerAttackRelease("D1", ECHO_DURATION, time + value.echoDelay);
+  var duration = value.offset < 0.4 ? 0.4 : value.offset;
+  value.primaryTone.triggerAttackRelease("D1", duration, time);
+  value.secondaryTone.triggerAttackRelease("D1", ECHO_DURATION, time + value.offset);
 }
 
 

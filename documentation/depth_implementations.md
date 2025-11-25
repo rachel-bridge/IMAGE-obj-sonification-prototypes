@@ -50,7 +50,7 @@ As noted in more detail in the documentation for Tone.js (`./tonejs.md`), I have
 # Single Secondary Tone - Prototypes
 This section describes two prototypes that are very similar. The core idea is for each object in the image to be represented by
 1. a primary long tone whose duration maps to the depth (distance from viewer) of that object; and
-2. a secondary tone that marks the end of the duration, and may reinforce the "depth"
+2. a secondary tone that marks the end of the main tone, and may reinforce the "depth"
 
 The variations on this idea are:
 - "echo" prototype - `depth_map_designs/echo.js`: The secondary tone is a synthesized echo of the first one. It uses the same "base" sound as the primary tone. The secondary tone for different objects has different degrees of effects applied depending on depth.
@@ -62,7 +62,7 @@ There are a few global variables for parameters that should be easy to change. T
 - `schema_url`: URL of the JSON schema to build the sonification off of. In a real implementation, this would be removed.
 - `TOGGLE_PLAY`: name (in KeyboardEvents API) of the key that should toggle play/pause of the sonification. Set to spacebar (`" "`; yes, actually) by default bc that most intuitive to me.
 - `TONE_SPACING`: number of seconds (can be decimal) of dead space between the end of the echo of one tone and the start of the main tone of the next.
-- `STOP_DURATION`: duration of the short tone that tags the end of a main tone, in seconds.
+- `SECONDARY_DURATION`: duration of the secondary tone, in seconds.
 
 There's also a global `toneEvents` array, which is global because it needs to be instantiated at load time: if it's instantiated during user input handling, even if in a separate function call before the playback, the `Sample` buffers aren't loaded in time and it crashes. Haven't worked out a fix for that yet.
 
@@ -73,9 +73,9 @@ The objects in the array are defined as follows:
 ```
 {
   "name" (string): name of the object (not currently used),
-  "objTone"(Sampler): the main tone generator,
-  "stopTone" (Sampler): the echo tone generator,
-  "duration" (number): number of seconds b/w start of main tone and start of echo tone,
+  "primaryTone"(Sampler): the main tone generator,
+  "secondaryTone" (Sampler): the echo tone generator,
+  "offset" (number): number of seconds b/w start of main tone and start of echo tone,
   "time" (TransportTime): start time of the main tone for this object
 }
 ```
@@ -88,7 +88,7 @@ Tones are played in the same order they are given in the json file.
 
 Once the tones and echoes are initialized, and the `toneEvents` array populated, another function is called that iterates over each object in that array and calculates the `time` for each one (see above). This is given by
 ```math
-(0 \lor \text{[start time of previous tone]}) + \text{[duration for this object]} + \text{ECHO\_DURATION} + \text{TONE\_SPACING}
+(0 \lor \text{[start time of previous tone]}) + \text{[offset for this object]} + \text{SECONDARY\_DURATION} + \text{TONE\_SPACING}
 ```
 where `STOP_DURATION` and `TONE_SPACING` are global (easily configurable) variables. Their purpose is exactly what the name says.
 
@@ -98,14 +98,17 @@ There is one `EventListener` for the "keydown" event, which calls a `handleDown(
 > [!NOTE]
 > This will not stop playback immediately (as mentioned in the Tone.js supplementary documentation `./tonejs.md`) but will stop at the end of the current tone (another TODO to make this better).
 
-Otherwise, create a (new every time) `Tone.Part` object with `events = toneEvents` (this is what it's for). A custom callback (`playTone()`) plays the main tone (`.objTone`) for its set duration (`.duration` or 0.4s whichever is the larger) at its set time (`.time`), then the stop tone (`.stopTone`) for `STOP_DURATION` seconds at time `.time + .duration`. 
+Otherwise, create a (new every time) `Tone.Part` object with `events = toneEvents` (this is what it's for). A custom callback (`playTone()`) plays the primary tone (`.primaryTone`) for the offset (`.offset`) or 0.4s whichever is the larger, Starting at its set time (`.time`). Then, it schedules the secondary tone (`.secondaryTone`) to play for `STOP_DURATION` seconds, starting at `TransportTime` `.time + .offset`. 
 
 By API specification, this callback must take a `time` argument and a `value` argument: however, `value` can be a dict as long as "time" is one of the keys. This is what I did here, to pass items of `toneEvents` as `value`.
 
 Once that's created, it calls `Tone.getTransport().start()` to start the scheduled playback.
 
-## Calculating duration
-The duration of the primary tone is also the time between the start of the primary and secondary tones.
+## Calculating offset
+This value serves two purposes: the **duration** of the primary tone, and the secondary tone's **start time offset** wrt the primary tone. This is because the secondary tone should start at the same moment the primary tone ends.
+
+> [!NOTE]
+> If the object is in the extreme foreground, the offset can be as low as 0.01 seconds. In this case, there is a minimum duration for the primary tone of 0.4 seconds, because 0.01 seconds is impractically short (i.e. it sounds weird).
 
 It's calculated by normalizing the depth value to the range [0.01, 3], where the secondary tone plays 0.01 seconds after the primary tone when depth = 0. That range was selected because an object in the extreme foreground shouldn't really have an "echo" of any kind. An offset of 0.01 seconds is enough that the signals don't interfere with one another, while still overlapping enough that to most people it seems like one sound.
 
