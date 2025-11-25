@@ -15,10 +15,10 @@ These prototypes obviously depend on the depth map, which is not currently integ
 
 It doesn't really matter what that depth value refers to (e.g. depth value of pixel closest to centroid, average value across bounding box, ...). I've been imagining it to be the average value within the outline of the object.
 
-The parameters of effects are computed based on the json definition it receives, typically by normalizing some value (e.g. depth) onto a different range. This is done using the following equation, where the initial range (of the value in the json schema) is $[a,b]$ and the new range is $[c,d]$, and given that $b > a$:\
-$$
-f(x) = c + \frac{d-c}{b-a} * (x - a)
-$$
+The parameters of effects are computed based on the json definition it receives, typically by normalizing some value (e.g. depth) onto a different range. This is done using the following equation, where the initial range (of the value in the json schema) is $[a,b]$ and the new range is $[c,d]$, and given that $b > a$:
+```math
+f(x) = c + \left(\frac{d-c}{b-a}\right) (x - a)
+```
 
 
 # "Thrown Ball" (idk what else to call it...)
