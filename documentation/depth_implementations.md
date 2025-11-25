@@ -96,7 +96,7 @@ Tones are played in the same order they are given in the json file.
 
 Once the tones and echoes are initialized, and the `toneEvents` array populated, another function is called that iterates over each object in that array and calculates the `time` for each one (see above). This is given by
 ```math
-(0 \or \text{[`time` of previous tone]}) + \text{echoDelay} + \text{ECHO_DURATION} + \text{TONE_SPACING}
+(0 \lor \text{[start time of previous tone]}) + \text{[echoDelay for this object]} + \text{ECHO\_DURATION} + \text{TONE\_SPACING}
 ```
 where `ECHO_DURATION` and `TONE_SPACING` are global (easily configurable) variables. Their purpose is exactly what the name says.
 
