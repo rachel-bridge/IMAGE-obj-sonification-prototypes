@@ -17,23 +17,7 @@
 
 <h2>Demo - vertical scanning over image</h2>
 
-<b>CONTROLS:</b> Up and down arrow keys to move "up" and "down" through the image. You're at the 
-bottom of the image by default. <br>
-
-<b>Using "scan_segmented.js" (default):</b><br>
-
-SIngle press on up or down arrow moves you up or down a "segment" and 
-then play that segment on loop. You can disable looping by
-changing the variable `LOOPS` at line 16 of `scan_segmented.js` to false. 
-Spacebar stops and restarts playback on the current segment.<br>
-
-<b>Using "scan_continuous.js":</b><br>
-
-Press and hold the up and down arrows to play "up" and "down" the image. 
-Release the key to stop playback, press again to resume from the same 
-point. This version was not 100% completed, so it may stop working when you 
-reach the end and backwards playback may behave weirdly (see 
-`documentation/scan_technical.md`). If this happens, <b>reload to reset</b>.<br>
+Up/down arrow keys to play. <b>For full controls, click "Show/Hide Instructions"</b> 
 
 
 <!-- <img src="photos/dramatic_crossing-a_stankiewicz.avif"
@@ -49,7 +33,7 @@ greyscale with strong light and dark contrast."><br/> -->
 </div> -->
 
 <div>
-  <h5>Play individual sounds</h5>
+  <h5>Play individual sounds - DOES NOT WORK</h5>
   <button type="button" id="sky-play-pause" value="Sky">
     <i class="fas fa-play small-play-icon"></i> Sky
   </button><br>
@@ -66,7 +50,7 @@ greyscale with strong light and dark contrast."><br/> -->
 
 
 <div>
-  <h5>Select parts of sonification</h5>
+  <h5>Select parts of sonification - DOES NOT WORK</h5>
   <form id="regions-to-play-toggle">
     <input type="radio" name="regions-to-play" id="play-all" onclick="toggleRegionSelect()" value="Play all regions">Play all regions
     <input type="radio" name="regions-to-play" id="play-selected" onclick="toggleRegionSelect()" value="Play selected regions">Play selected regions only
@@ -101,29 +85,52 @@ greyscale with strong light and dark contrast."><br/> -->
 <label for="ground-checkbox">Ground</label> -->
 
 <br>
-<button type='button' onclick="toggleText()" class="instruction-button">Show Instructions</button>
+<button type='button' onclick="toggleText()" class="instruction-button">Show/Hide Instructions</button>
 <span id='instructions' style='display: none'>
-<p>
-  Each of the regions in this image has an associated sound. Imagine a bar scanning 
-  over the image from bottom to top: the sound of a region plays when that region is
-  present under that bar. The volume of the sound is proportional to how much of image
-  it takes up under that bar.
-  <br>
-  <span style="margin-left: 1rem;">e.g. If the sound for "water" and the sound for 
-    "rock" are playing at equal volumes, the image at that height is about half 
-    water and half rock.
-  </span>
-  <br>
-  <span style="margin-left: 1rem;">e.g. If a sound plays for the first quarter of 
-    the total sonification and then disappears, that region is only present in the 
-    bottom quarter of the image
-  </span>
-</p>
-<p>
-  The selected regions below will appear in the sonification.
-  <br>
-  Click the "Hear [sound] alone" button for a region to play its associated sound alone.
-</p>
+  <p>
+    <h4>Controls</h4>
+    Up and down arrow keys to move "up" and "down" 
+    through the image. You're at the bottom of the image by default. <br>
+
+    <b>Using "scan_segmented.js" (default):</b><br>
+
+    Single press on up or down arrow moves you up or down a "segment" and 
+    then play that segment on loop. You can disable looping by
+    changing the variable `LOOPS` at line 16 of `scan_segmented.js` to false. 
+    Spacebar stops and restarts playback on the current segment.<br>
+
+    <b>Using "scan_continuous.js":</b><br>
+
+    Press and hold the up and down arrows to play "up" and "down" the image. 
+    Release the key to stop playback, press again to resume from the same 
+    point. This version was not 100% completed, so it may stop working when 
+    you reach the end and backwards playback may behave weirdly (see 
+    `documentation/scan_technical.md`). If this happens, <b>reload to 
+    reset</b>.<br>
+  </p>
+  <p>
+    <b>NOT IMPLEMENTED YET:</b><br>
+    The selected regions will appear in the sonification.
+    <br>
+    Click the "Hear [sound] alone" button for a region to play its associated sound alone.
+  </p>
+  <p>
+    <h4>Concept</h4>
+    Each of the regions in this image has an associated sound. Imagine a bar scanning 
+    over the image from bottom to top: the sound of a region plays when that region is
+    present under that bar. The volume of the sound is proportional to how much of image
+    it takes up under that bar.
+    <br>
+    <span style="margin-left: 1rem;">e.g. If the sound for "water" and the sound for 
+      "rock" are playing at equal volumes, the image at that height is about half 
+      water and half rock.
+    </span>
+    <br>
+    <span style="margin-left: 1rem;">e.g. If a sound plays for the first quarter of 
+      the total sonification and then disappears, that region is only present in the 
+      bottom quarter of the image
+    </span>
+  </p>
 </span>
 <br>
 
