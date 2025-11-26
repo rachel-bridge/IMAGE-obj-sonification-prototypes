@@ -18,10 +18,10 @@ Technical documentation of the nitty-gritty implementation details for the depth
 Technical documentation of the nitty-gritty implementation details for the scanning prototypes.
 
 **depth_usage.md**\
-Usage documentation for demo-ing the depth map category of prototypes.
+Usage documentation for demo-ing the depth map category of prototypes. How to use the controls under default settings, how to change parameters like tone spacing and secondary tone duration...etc.
 
 **scan_usage.md**\
-Usage documentation for demo-ing the scan category of prototypes.
+Usage documentation for demo-ing the scan category of prototypes. How to use and change the interactive controls.
 
 **EDITED_object_detection_schema.json**\
 IMAGE object detection schema, with the "depth" property added as I've defined it for the depth map prototypes.
