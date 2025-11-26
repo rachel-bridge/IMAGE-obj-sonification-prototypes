@@ -1,5 +1,5 @@
-# Intro
-**This doc covers usage of this prototype and design considerations. For documentation of the technical side of things, see `documentation/scan_technical.md`.**
+# Concept
+**This doc covers design considerations for the "scan" prototypes. For documentation of the technical side of things, see `scan_technical.md`. For usage documentation, see `scan_usage.md`**
 
 This design is meant to go alongside an alt-text description, like the spatialized audio in IMAGE as it exists at time of writing.
 
@@ -18,14 +18,6 @@ Put another way, each of the regions detected in an image has an associated soun
 
 *If you've ever played the demo for sheet music online and seen the line moving across it to track the place, that's where I got the idea. [Video example](https://www.youtube.com/watch?v=NWEVKyEwi4A&list=PLhkgFCE9DX4PplwDyQrNN_XTedppjjiry&index=1).*
 
-
-# Usage
-
-Set up a localhost however you want. The original static (non-interactive) prototype can be found at `scan/static_prototype`. For both interactive prototypes, pull up a localhost of `scan/scan.html`. The default version is the one that breaks the playback into sections. For the continuous playback, switch the \<script\> tag to point to `scan_continuous.js` (it points to `scan_segmented.js` by default).
-
-The default keybinds for both interactive prototypes are up/down arrow keys to move up and down through the image, and spacebar to mute or restart playback.
-
-Keybinds and, for the "segemnted" version, number of segments, can be changed by editing global variables in the appropriate .js file. One of my TODO's is to make that configurable from the web page.
 
 # Design
 

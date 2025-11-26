@@ -5,17 +5,23 @@
 **tonejs.md**\
 Supplemental documentation for Tone.js API, to fill holes that I encountered in their official documentation.
 
-**depth_design_usage.md**\
-Documentation of design considerations for the prototypes using the depth map generator. Also contains usage information for demo-ing the depth map prototypes.
+**depth_design.md**\
+Documentation of design considerations for the prototypes using the depth map generator.
 
-**scan_design_usage.md**\
-Documentation of design considerations for the scanning prototypes. Also contains usage information for demo-ing the scan prototypes.
+**scan_design.md**\
+Documentation of design considerations for the scanning prototypes. 
 
 **depth_technical.md**\
 Technical documentation of the nitty-gritty implementation details for the depth map prototypes.
 
 **scan_technical.md**\
 Technical documentation of the nitty-gritty implementation details for the scanning prototypes.
+
+**depth_usage.md**\
+Usage documentation for demo-ing the depth map category of prototypes.
+
+**scan_usage.md**\
+Usage documentation for demo-ing the scan category of prototypes.
 
 **EDITED_object_detection_schema.json**\
 IMAGE object detection schema, with the "depth" property added as I've defined it for the depth map prototypes.
