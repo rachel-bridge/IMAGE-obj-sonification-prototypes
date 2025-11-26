@@ -17,6 +17,25 @@
 
 <h2>Demo - vertical scanning over image</h2>
 
+<b>CONTROLS:</b> Up and down arrow keys to move "up" and "down" through the image. You're at the 
+bottom of the image by default. <br>
+
+<b>Using "scan_segmented.js" (default):</b><br>
+
+SIngle press on up or down arrow moves you up or down a "segment" and 
+then play that segment on loop. You can disable looping by
+changing the variable `LOOPS` at line 16 of `scan_segmented.js` to false. 
+Spacebar stops and restarts playback on the current segment.<br>
+
+<b>Using "scan_continuous.js":</b><br>
+
+Press and hold the up and down arrows to play "up" and "down" the image. 
+Release the key to stop playback, press again to resume from the same 
+point. This version was not 100% completed, so it may stop working when you 
+reach the end and backwards playback may behave weirdly (see 
+`documentation/scan_technical.md`). If this happens, <b>reload to reset</b>.<br>
+
+
 <!-- <img src="photos/dramatic_crossing-a_stankiewicz.avif"
 alt="A small herd of wildebeest leap into a river. Thick clouds of mist obscure
 the background. The photo, "Dramatic Crossing" by Artur Stankiewicz, is 
