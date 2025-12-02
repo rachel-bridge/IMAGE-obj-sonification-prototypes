@@ -12,60 +12,33 @@ The depth map-based prototypes use a schema based on the [object detection schem
 
 
 # Documentation
-**More detailed documentation for all of these can be found in the `documentation` directory.** This is just an overview.
+This file is an overview: **see [here](https://github.com/rachel-sedibridge/COMP400-proj-IMAGE/blob/documentation/documentation/guide.md#documentation-guide) for full documentation** (*link to table of contents*).
 
-See [`/documentation/guide.md`](https://github.com/rachel-sedibridge/COMP400-proj-IMAGE/blob/documentation/documentation/guide.md#documentation-guide) for a table of contents and short overview of every prototype in this repo.
-
-TL;DR of `guide.md`:
-- **`<prototype_group>_design.md`**: Concept description for that group of prototypes. Design considerations and iteration.
-- **`<prototype_group>_technical.md`**: In-depth technical documentation for prototypes in that group.
-- **`<prototype_group>_usage.md`**: Instructions for taking a look a the prototypes yourself.
-- **other**: supporting misc. documentation, e.g. object schema for the depth map-based prototypes.
+Table of contents TL;DR (just click the link though):
+- **`/documentation/<prototype_group>_design.md`**: Concept description for that group of prototypes. Design considerations and iteration.
+- **`/documentation/<prototype_group>_technical.md`**: In-depth technical documentation for prototypes in that group.
+- **`/documentation/<prototype_group>_usage.md`**: Instructions for taking a look a the prototypes yourself.
 
 
-# Designs
+# Design groups
+All designs are meant to go alongside and enhance alt-text, not replace it.
+
+There are variations/iterations of every design "group" listed below: **see [here](https://github.com/rachel-sedibridge/IMAGE-obj-sonification-prototypes/blob/main/documentation/guide.md#prototypes) for high-level breakdown** (*link to docs*). 
 
 ## Depth map-based
+See [specific design documentation](https://github.com/rachel-sedibridge/IMAGE-obj-sonification-prototypes/blob/main/documentation/depth_design.md#concept) for more details.
+
 Communicate three dimensions of information using spatialization\* for the x-y plane, and some way of communicating depth. This is what varies between designs.
 
 *\*NOTE: these prototypes use simple left-right spatialization (just x) for simplicity, but they use the Tone.js API, which does support higher-dimension equalpower or HRTF panning .*
 
 
 ## Scan
-This design is meant to go alongside an alt-text description, like the spatialized audio in IMAGE as it exists at time of writing.
+See [specific design documentation](https://github.com/rachel-sedibridge/IMAGE-obj-sonification-prototypes/blob/main/documentation/scan_design.md#concept) for more details.
 
-This design plays with assigning real-life representational sounds to regions, as well as depicting height within the 2D projection of the picture. It maps the identified regions to a representational sound (e.g. waves on a lake for water-related sounds). It then "scans" up the picture from bottom to top, and the sound for each region appears, disappears, and grows lounder or quieter in the sonification where that region takes up more or less space in the picture.
-
-Put another way, each of the regions detected in an image has an associated sound. Imagine a bar scanning over the image from bottom to top: the sound of a region plays when that region is present under that bar. The volume of the sound is proportional to how much of image it takes up under the bar.
-&nbsp;&nbsp;&nbsp;&nbsp;e.g. If the sound for "water" and the sound for "rock" are playing at equal volumes, the image at that height is about half water and half rock.
-&nbsp;&nbsp;&nbsp;&nbsp;e.g. If a sound plays for the first quarter of the total sonification and then disappears, that region is only present in the bottom quarter of the image.
-
-[If that made no sense, imagine taking a very small horizontal slice of the bottom of a photo. Like, the bottom 2 rows of pixels. This sonification plays the sounds for the regions present in this slice, with volume proportional to how much of the slice they take up.]: #
-
-[&nbsp;&nbsp;&nbsp;&nbsp;e.g. If that slice contains entirely water, you will hear only the sound associated to "water".]: #
-[&nbsp;&nbsp;&nbsp;&nbsp;e.g. If that slice is 67% "field" and 33% "forest", you will hear the sounds for both those regions, with "field" sounding roughly twice as loud as "forest".]: #
-
-[Then, imagine looking at the next 2 rows of pixels and playing the sonification for that, then the next, and so on up to the top of the picture.]:  #
-
-*If you've ever played the demo for sheet music online and seen the line moving across it to track the place, that's where I got the idea. [Video example](https://www.youtube.com/watch?v=NWEVKyEwi4A&list=PLhkgFCE9DX4PplwDyQrNN_XTedppjjiry&index=1).*
-
-
-### Design idea
-This design covers two things.
-
-The first was an attempt to represent height by focusing on the vertical composition of the picture. It communicates height only in the context of the 2D projection, so this would almost certainly be more useful for late-blind users who find it useful to create a 2D mental image.
-
-The second is immersion: the hope is that by using sounds representing the regions in real life, users get a richer experience of the image.
-
-### Limitations
-- (Probably!! Not tested!!) mainly useful for late-blind: not universally helpful
-- Finding sounds to represent the regions is *hard*. It's helpful that these are long tones, but it's still a pain. The `sound_map.json` file contains the beginnings of this mapping.
-- This is not an intuitive design: I did my best w/ the instructions and making the experience customizable and parse-able, but there's still some amount of learning curve.
-
-### Variations
-1. Static (OG)
-2. Interactive, continuous
-3. Interactive, sectioned (**this is the best one**)
+Main components:
+1. Representing height. Focuses on the vertical composition of the picture: relies heavily on the picture being a 2D projection. Therefore, this design is likely to be more useful to late-blind users (past SRL user studies show late-blind people find 2D projections much more intuitive).
+2. Use sounds that might go with the semantic regions in real life (sound of waves for water, heartbeat for animal/person...etc). Hopefully, this gives users a richer experience.
 
 
 ## OLD - depth layers
@@ -107,7 +80,8 @@ Controls (repeated in instructions):
 
 
 
-# TODOs (incomplete)
+# TODO
+Incomplete list
 - reduce the number of global vars esp. in the "scan" prototypes
 - versions of all prototypes w/ more pictures
 - implement UI features for `scan_segmented`
