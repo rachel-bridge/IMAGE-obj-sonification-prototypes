@@ -41,37 +41,8 @@ Main components:
 2. Use sounds that might go with the semantic regions in real life (sound of waves for water, heartbeat for animal/person...etc). Hopefully, this gives users a richer experience.
 
 
-## OLD - depth layers
-This prototype does not have more detailed documentation in the `documentation` folder because it's not very good so I didn't think it was worth it...
-
-This was the first prototype I made at the very beginning of this project. It was too good a prototype for that point in the project: I'd done no testing and not enough brainstorming. **I do not recommend this for integration with IMAGE**. I'm just leaving it in for the sake of completeness. Who knows, maybe it'll be useful at some point.
-
-This idea divides an image (a very easily-split landscape was used for demonstration purposes) into "layers" of perspective, from closest to farthest. Users can navigate forwards and backwards within these layers to gain a more immersive impression of the photo. Additional navigation is available for moving vertically within a "layer".
-
-The idea was to apply the depth mapping, since I'd been told that was very useful especially for early-blind individuals.
-
-This idea also aimed to replace the alt-text description by integrating it with an interactive experience.
-
-**Actually, the controls from this prototype may still be a useful idea even if the sonification strategies aren't**.
-
-### Features used:
-- Pitch to outline the shape of a region (*this one has been lovingly nicknamed the "slide whistle" prototype...*)
-- Volume to depict texture (e.g. rapidly changing volume for fluffy clouds)
-- 2D panning: show horizontal extent of a region within a "layer"
-
-### Usage
-Execute the `prototype.py` script, follow spoken instructions.
-
-Controls (repeated in instructions):
-- `up` to move "deeper" (farther from yourself) by one layer
-- `down` to move "closer" to yourself by one layer
-- `shift+up` & `shift+down` to move vertically within the current layer.
-
-### Missing
-- The audio clips play on top of each other if you start one before the last one finishes.
-- Program exits before the "exiting" audio clip can play
-- I used a free limited AI text-to-voice program, so the voice is wonky at times and not always the same (I exceeded the daily limit on the main voice I'd been using lol)
-
+## Layers --- first draft
+The very first draft prototype is preserved in a tagged commit. See documentation [here](https://github.com/rachel-sedibridge/IMAGE-obj-sonification-prototypes/blob/main/documentation/layers_prototype.md).
 
 
 # Terminology
@@ -90,6 +61,7 @@ Incomplete list
 - the start/stop in "echo" prototype makes the tones a little louder every time you pause: 3 pauses in and it's so loud the noise is breaking. No *clue* why, gotta fix that.
 - read out names (label tones) in depth_map prototypes
 - work out timing so that `toneEvents` doesn't need to be global var - `echo.js`, `thrown_ball.js`
+
 
 # License
 This project is licensed under the McGill SRL IMAGE contributor license agreement [here](https://github.com/Shared-Reality-Lab/IMAGE-server/blob/main/CLA.md).
