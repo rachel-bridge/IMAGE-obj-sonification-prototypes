@@ -13,6 +13,12 @@ These editions of these prototypes have not implemented the more complex UI feat
 - KeyboardEvent API (built-in) (docs [here](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent))
 
 
+# Sound map
+See the file [`/documentation/scan_sound_map.json`](https://github.com/rachel-sedibridge/IMAGE-obj-sonification-prototypes/blob/main/documentation/scan_sound_map.json) for a preliminary mapping.
+
+Includes potential semantic synonyms, and links to the original stock sound online.
+
+
 # Segmented
 
 ## 1. Global variables
