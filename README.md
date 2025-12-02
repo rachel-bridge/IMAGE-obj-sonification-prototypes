@@ -1,12 +1,34 @@
 # Description
 Sound design prototypes for [IMAGE](https://image.a11y.mcgill.ca/).
 
+There are two groups of prototypes in this repo: "scanning" (`/scan/`) and depth map-based (`/depth_map_designs/`).
+
+Each group of prototypes uses only one image so far: they can be found in the directory for that group, under the `photos/` subdirectory.
+
+## Dependencies
+Prototypes use the [Tone.js](https://tonejs.github.io/) API (v15). In cases where keyboard input is used, the JavaScript builtin [Keyboard Events API](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent) is used.
+
+The depth map-based prototypes use a schema based on the [object detection schema](https://github.com/Shared-Reality-Lab/IMAGE-server/blob/2945b52da77bf74b1307e7e2286c6297ebef6157/preprocessors/object-detection.schema.json) for IMAGE.
+
+
+# Documentation
 **More detailed documentation for all of these can be found in the `documentation` directory.** This is just an overview.
+
+See [`/documentation/guide.md`](https://github.com/rachel-sedibridge/COMP400-proj-IMAGE/blob/documentation/documentation/guide.md#documentation-guide) for a table of contents and short overview of every prototype in this repo.
+
+TL;DR of `guide.md`:
+- **`<prototype_group>_design.md`**: Concept description for that group of prototypes. Design considerations and iteration.
+- **`<prototype_group>_technical.md`**: In-depth technical documentation for prototypes in that group.
+- **`<prototype_group>_usage.md`**: Instructions for taking a look a the prototypes yourself.
+- **other**: supporting misc. documentation, e.g. object schema for the depth map-based prototypes.
 
 
 # Designs
 
-## Echo
+## Depth map-based
+Communicate three dimensions of information using spatialization\* for the x-y plane, and some way of communicating depth. This is what varies between designs.
+
+*\*NOTE: these prototypes use simple left-right spatialization (just x) for simplicity, but they use the Tone.js API, which does support higher-dimension equalpower or HRTF panning .*
 
 
 ## Scan
@@ -45,21 +67,6 @@ The second is immersion: the hope is that by using sounds representing the regio
 2. Interactive, continuous
 3. Interactive, sectioned (**this is the best one**)
 
-### This prototype
-This is a single "wizard of Oz" example with the photo at `scanning/photos/dramatic_crossing-a_stankiewicz.jpg`. The sound for each region was created by uploading the stock sounds into Reaper, manually editing the volume according to roughly where IMAGE split the regions, and rendering one track at a time. This is also a pretty simple picture with a few big regions, and horizontally organized.
-
-I have yet to make a version of this with a greater variety of images.
-
-### Implementation / Dependencies
-Audio editing & playback [Tone.js](https://github.com/Tonejs/Tone.js/tree/dev).
-
-Base sounds:
-- "sky": <https://pixabay.com/sound-effects/wind-blowing-sfx-07-423677/>
-- "water": <https://pixabay.com/sound-effects/lake-waves-1-411720/>
-- "animal": <https://pixabay.com/sound-effects/horse-galloping-339737/>
-- "ground": <https://pixabay.com/sound-effects/rocks-falling-44890/>
-Here's the Pixabay (stock sound site) public [collection](https://pixabay.com/accounts/collections/30321802/) of sound clips I considered using.
-
 
 ## OLD - depth layers
 This prototype does not have more detailed documentation in the `documentation` folder because it's not very good so I didn't think it was worth it...
@@ -89,7 +96,6 @@ Controls (repeated in instructions):
 
 ### Missing
 - The audio clips play on top of each other if you start one before the last one finishes.
-- I was never happy with the sound effects.
 - Program exits before the "exiting" audio clip can play
 - I used a free limited AI text-to-voice program, so the voice is wonky at times and not always the same (I exceeded the daily limit on the main voice I'd been using lol)
 
@@ -98,7 +104,6 @@ Controls (repeated in instructions):
 # Terminology
 - "Region": something identified by the semantic segmentation, using [this schema](https://github.com/Shared-Reality-Lab/IMAGE-server/blob/2945b52da77bf74b1307e7e2286c6297ebef6157/preprocessors/segmentation.schema.json)
 - "Object" (in context of IMAGE output): something identified by object detection, using [this schema](https://github.com/Shared-Reality-Lab/IMAGE-server/blob/2945b52da77bf74b1307e7e2286c6297ebef6157/preprocessors/object-detection.schema.json)
-- "2D panning": exclusively left-right panning
 
 
 
