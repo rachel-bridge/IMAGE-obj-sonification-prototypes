@@ -231,6 +231,8 @@ function playToneGroup(time, value) {
 
 // TEST/MISC
 // this holds my experimental messing around, you may disregard :)
+// LICENSING NOTE: some of the code in this block may be copied directly from
+// the Tone.js documentation examples.
 // function playbackTester() {
 //   const channel1 = new Tone.Channel({
 //     pan: -0.25
@@ -238,6 +240,19 @@ function playToneGroup(time, value) {
 //   const channel2 = new Tone.Channel({
 //     pan: 1
 //   });
+
+//   const autoPanner = new Tone.AutoPanner({depth: 1, frequency: 2}).toDestination().start();
+//   // basicTone.connect(autoPanner);
+
+//   const panner = new Tone.Panner(-1).toDestination();
+//   basicTone.connect(panner);
+//   // a scheduleable signal which can be connected to control an AudioParam or another Signal
+//   const signal = new Tone.Signal({
+//       value: 0,
+//       units: "number"
+//   }).connect(panner.pan);
+//   // the scheduled ramp controls the connected signal
+//   signal.rampTo(-1, 1.5);
 
 //   // basicTone.chain(channel1, Tone.getDestination());
 //   // basicTone.triggerAttackRelease("D1", 0.5, 0);
@@ -247,6 +262,8 @@ function playToneGroup(time, value) {
 //   // basicTone.chain(channel2, Tone.getDestination());
 //   // basicTone.triggerAttackRelease("D1", 0.5, 1);
 //   // // basicTone.disconnect(channel2);
+
+//   basicTone.triggerAttackRelease("D1", 2);
 // }
 
 // const basicTone = new Tone.Sampler({
