@@ -35,6 +35,18 @@ list of objects w/ this schema...
 */
 
 // FILE-GLOBAL VARS
+
+// version control
+// T to play tones in one semantic category at once, F to play tones individually
+const GROUP_TONES = true;// T to put the 'distancing' effects on the secondary tones so they sound like
+// echoes, F to have just the raw sound in the secondary tone.
+const ECHOLOCATION_MODE = true;
+
+// sonification generation URLs
+const D_URL = "clean_d_str_pick.mp3";
+const SECONDARY_URL = "tennis_ball_hit.mp3";
+const schema_url = "image_jsons/city_street.json"
+// const schema_url = "json_schemas/test.json"
 // group names to text-to-speech (TTS) audio files mapping
 const NUMBERS_TTS = {
   1: "audio_tracks/labels/numbers/one.mp3",
@@ -45,19 +57,6 @@ const NUMBERS_TTS = {
   6: "audio_tracks/labels/numbers/six.mp3",
 };
 const LABEL_BASE_URL = "audio_tracks/labels/";
-
-// version control
-// T to play tones in one semantic category at once, F to play tones individually
-const GROUP_TONES = true;
-// T to put the 'distancing' effects on the secondary tones so they sound like
-// echoes, F to have just the raw sound in the secondary tone.
-const ECHOLOCATION_MODE = true;
-
-// sonification generation URLs
-const D_URL = "clean_d_str_pick.mp3";
-const SECONDARY_URL = "tennis_ball_hit.mp3";
-const schema_url = "image_jsons/city_street.json"
-// const schema_url = "json_schemas/test.json"
 
 // keybinds
 const TOGGLE_PLAY = ' '; //key to toggle play/pause
