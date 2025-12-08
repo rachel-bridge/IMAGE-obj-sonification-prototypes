@@ -53,6 +53,7 @@ const TONE_SPACING = 0.3; //in seconds, time between end of one tone and start o
 const SECONDARY_DURATION = 0.14; //in seconds, how long the secondary tone lasts
 
 var toneEvents = []; //list of tone event objs used in playback, populate during loading
+var toneGroupEvents = []
 
 
 // SETUP -- GET OBJECT DATA AND GENERATE TONES
@@ -60,14 +61,18 @@ var toneEvents = []; //list of tone event objs used in playback, populate during
 const response = await fetch(schema_url);
 const jsonData = await response.json(); //json blob from object detection
 
-generateTonesFromObjects(jsonData);
+if (GROUP_TONES) { // grouped by category
+  generateToneGroupsFromObjects(jsonData);
+} else { // played individually
+  generateTonesFromObjects(jsonData);
+}
 // ==========================
 
 
 // TONE SETUP FUNCTIONS
 // run through object data and create the tone + echo for each one
 function generateTonesFromObjects(data) {
-  for (const [index, obj] of Object.entries(data)) {
+  for (const obj of Object.values(data)) {
     var objName = `${obj.type}${obj.ID}`;
     var x = obj.centroid[0];
     var depth = obj.depth;
@@ -88,18 +93,11 @@ function generateTonesFromObjects(data) {
     });
     // set 2D pan using x coordinate of centroid
     var panner = new Tone.Panner(normalizePanX(x));
+    // the secondary ("stop") tone I picked is pretty loud, bring it down to pull focus away
+    var volume = new Tone.Volume(-14);
     // apply those effects to the echo. Only add panning to primary if
     // playing tone individually.
-    if (GROUP_TONES) {
-      // reduce secondary tone volume only by a little bit, because it is important now
-      // but it is really kinda loud
-      var volume = new Tone.Volume(-2);
-      primary.connect(Tone.getDestination())
-    } else {
-      // the secondary ("stop") tone I picked is pretty loud, bring it down to pull focus away
-      var volume = new Tone.Volume(-14);
-      primary.chain(panner, Tone.getDestination());
-    }
+    primary.chain(panner, Tone.getDestination());
     secondary.chain(volume, panner, Tone.getDestination());
   
     // save essential info in an event array that can be passed to Part or Sequence
@@ -114,7 +112,81 @@ function generateTonesFromObjects(data) {
   }
 
   // set correct times now that array is fully populated
-  setStartTimes();
+  setStartTimes(toneEvents);
+}
+
+// set the start times for each tone in the toneEvents array
+// increase next start time by (this one + its length + secondary tone duration + spacing)
+function setStartTimes(tonesArray) {
+  var curTime = 0;
+  for (var i = 0; i < tonesArray.length; i++) {
+    tonesArray[i].time = curTime; //0 when i = 0
+    curTime = curTime + tonesArray[i].offset + SECONDARY_DURATION + TONE_SPACING;
+  }
+}
+
+// repeat of generateTonesFromData but for GROUP_TONES = true.
+function generateToneGroupsFromObjects(data) {
+  for (const toplvl_obj of Object.values(data)) {
+    // If obj is of a semantic category that's already been covered, skip it.
+    if (toneGroupEvents.map((x) => x.groupName).includes(toplvl_obj.type)) {
+      continue;
+    }
+    // Get all the objects in this semantic category (group).
+    const objects = Object.values(data).filter((x) => x.type == toplvl_obj.type);
+    // Create the primary (group-wide) tone.
+    var primary = new Tone.Sampler({
+      urls: { D1: D_URL }, //not actually octave 1 but doesn't matter for this
+      baseUrl: "audio_tracks/",
+      release: 0.3,
+    }).toDestination();
+    // Start lists of the secondary tones and their offsets.
+    var secondaryTones = [];
+    var offsets = [];
+
+    // Now iterate over the semantic category (group) objects.
+    for (const obj of objects) {
+      var x = obj.centroid[0];
+      var depth = obj.depth;
+
+      // Create the secondary (object-specific) tone for this group. Reduce
+      // the volume bc the sound I grabbed for this is kinda loud.
+      var secondary = new Tone.Sampler({
+        urls: { D1: "audio_tracks/" + SECONDARY_URL },
+        volume: -2
+      });
+      // Get the pan for this object, using x coordinate of centroid.
+      const pan = normalizePanX(x);
+      // Create the panner object for the secondary tone and connect it.
+      const panner = new Tone.Panner(pan);
+      secondary.chain(panner, Tone.getDestination());
+    
+      // Add this tone and it's depth-based offset to the lists.
+      secondaryTones.push(secondary);
+      offsets.push(normalizeDepthToTime(depth));
+    }
+
+    toneGroupEvents.push({
+      groupName: toplvl_obj.type,
+      primaryTone: primary,
+      primaryDuration: Math.max(...offsets), // has to last until the last sec. tone
+      secondaryTones: secondaryTones,
+      offsets: offsets,
+      time: 0 // set in next step
+    });
+  }
+
+  // set correct times now that array is fully populated
+  setGroupStartTimes(toneGroupEvents);
+}
+
+// set start times for primary tones when tones are grouped by category
+function setGroupStartTimes(tonesArray) {
+  var curTime = 0;
+  for (var i = 0; i < tonesArray.length; i++) {
+    tonesArray[i].time = curTime; //0 when i = 0
+    curTime = curTime + tonesArray[i].primaryDuration + SECONDARY_DURATION + TONE_SPACING;
+  }
 }
 
 // normalize from centroid x coord on [0, 1] to Tone.Panner input on [-1, 1]
@@ -142,49 +214,31 @@ function normalizeDepthToTime(depth) {
 //   return reduce_min + (reduce_max - reduce_min) * depth; //linear
 // }
 
-// set the start times for each tone in the toneEvents array
-// increase next start time by (this one + its length + secondary tone duration + spacing)
-function setStartTimes() {
-  var curTime = 0;
-  for (var i = 0; i < toneEvents.length; i++) {
-    toneEvents[i].time = curTime; //0 when i = 0
-    curTime = curTime + toneEvents[i].offset + SECONDARY_DURATION + TONE_SPACING;
-  }
-}
 
-// convert toneEvents array to the right format for grouping
-function groupToneEvents() {
-  var newToneEvents = [];
+// // convert toneEvents array to the right format for grouping
+// function groupToneEvents() {
+//   var newToneEvents = [];
 
-  // for every element of toneEvents, check its category
-  for (var category of toneEvents.map((x) => x.category)) {
-    // if it's one we've already dealth with, skip
-    if (newToneEvents.map((obj) => obj.catName).includes(category)) {
-      continue;
-    }
-    // else, get *all elements* of toneEvents that are of that category
-    const cat_objs = toneEvents.filter((obj) => obj.category == category);
-    newToneEvents.push({
-      catName: category,
-      primaryTone: cat_objs.map((obj) => obj.primaryTone)[0], //only use the 1st primary tone!
-      primaryDuration: Math.max(...cat_objs.map((obj) => obj.offset)),
-      secondaryTones: cat_objs.map((obj) => obj.secondaryTone),
-      offsets: cat_objs.map((obj) => obj.offset),
-      time: 0 // set start time later!
-    })
-  }
+//   // for every element of toneEvents, check its category
+//   for (var category of toneEvents.map((x) => x.category)) {
+//     // if it's one we've already dealth with, skip
+//     if (newToneEvents.map((obj) => obj.groupName).includes(category)) {
+//       continue;
+//     }
+//     // else, get *all elements* of toneEvents that are of that category
+//     const cat_objs = toneEvents.filter((obj) => obj.category == category);
+//     newToneEvents.push({
+//       groupName: category,
+//       primaryTone: cat_objs.map((obj) => obj.primaryTone)[0], //only use the 1st primary tone!
+//       primaryDuration: Math.max(...cat_objs.map((obj) => obj.offset)),
+//       secondaryTones: cat_objs.map((obj) => obj.secondaryTone),
+//       offsets: cat_objs.map((obj) => obj.offset),
+//       time: 0 // set start time later!
+//     })
+//   }
 
-  return newToneEvents;
-}
-
-// set start times for primary tones when tones are grouped by category
-function setGroupStartTimes(toneArray) {
-  var curTime = 0;
-  for (var i = 0; i < toneArray.length; i++) {
-    toneArray[i].time = curTime; //0 when i = 0
-    curTime = curTime + toneArray[i].primaryDuration + SECONDARY_DURATION + TONE_SPACING;
-  }
-}
+//   return newToneEvents;
+// }
 
 
 // KEYBINDINGS / PLAYBACK
@@ -201,9 +255,7 @@ function handleDown(e) {
   else {
     // play all the tones in sequence, without narration so far
     if (GROUP_TONES) {
-      const events = groupToneEvents();
-      setGroupStartTimes(events);
-      const tonePart = new Tone.Part(playToneGroup, events).start(0);
+      const tonePart = new Tone.Part(playToneGroup, toneGroupEvents).start(0);
     } else {
       const tonePart = new Tone.Part(playTone, toneEvents).start(0);
     }
@@ -221,7 +273,7 @@ function playTone(time, value) {
 
 // callback for the Tone.Part that plays tones: tones grouped by semantic category
 function playToneGroup(time, value) {
-  // value contains `catName` for the 'captioning', not implemented yet
+  // value contains `groupName` for the 'captioning', not implemented yet
   value.primaryTone.triggerAttackRelease("D1", value.primaryDuration, time);
   for (var i = 0; i < value.secondaryTones.length; i++) {
     value.secondaryTones[i].triggerAttackRelease("D1", SECONDARY_DURATION, time + value.offsets[i])
@@ -236,36 +288,49 @@ function playToneGroup(time, value) {
 // function playbackTester() {
 //   const channel1 = new Tone.Channel({
 //     pan: -0.25
-//   });
+//   }).toDestination();
 //   const channel2 = new Tone.Channel({
 //     pan: 1
-//   });
+//   }).toDestination();
+//   console.log(channel1.numberOfInputs)
+//   console.log(channel1.numberOfOutputs)
 
-//   const autoPanner = new Tone.AutoPanner({depth: 1, frequency: 2}).toDestination().start();
+//   // const autoPanner = new Tone.AutoPanner({depth: 1, frequency: 2}).toDestination().start();
 //   // basicTone.connect(autoPanner);
 
-//   const panner = new Tone.Panner(-1).toDestination();
-//   basicTone.connect(panner);
-//   // a scheduleable signal which can be connected to control an AudioParam or another Signal
-//   const signal = new Tone.Signal({
+//   const panner1 = new Tone.Panner(-1).toDestination();
+//   const panner2 = new Tone.Panner(-1).toDestination();
+
+//   const signal1 = new Tone.Signal({
 //       value: 0,
 //       units: "number"
-//   }).connect(panner.pan);
-//   // the scheduled ramp controls the connected signal
-//   signal.rampTo(-1, 1.5);
+//   }).connect(panner1.pan);
+//   signal1.rampTo(-1, 1.75);
+//   const signal2 = new Tone.Signal({
+//       value: 0,
+//       units: "number"
+//   }).connect(panner2.pan);
+//   signal2.rampTo(1, 1);
 
-//   // basicTone.chain(channel1, Tone.getDestination());
-//   // basicTone.triggerAttackRelease("D1", 0.5, 0);
-//   // // basicTone.disconnect(channel1);
-//   // // basicTone.toDestination()
+//   const split = new Tone.Split(4)
 
-//   // basicTone.chain(channel2, Tone.getDestination());
-//   // basicTone.triggerAttackRelease("D1", 0.5, 1);
-//   // // basicTone.disconnect(channel2);
 
-//   basicTone.triggerAttackRelease("D1", 2);
+//   tone1.connect(split, 0, 0)
+//   tone2.connect(split, 0, 0)
+
+//   split.connect(panner1, 1, 0)
+//   split.connect(panner2, 2, 0)
+
+//   tone1.triggerAttackRelease("D1", 2);
+//   tone2.triggerAttackRelease("D1", 2);
 // }
 
+// const tone1 = new Tone.Sampler({
+//   urls: {D1: 'audio_tracks/clean_d_str_pick.mp3'}
+// });
+// const tone2 = new Tone.Sampler({
+//   urls: {D1: 'audio_tracks/clean_d_str_pick.mp3'}
+// });
 // const basicTone = new Tone.Sampler({
 //   urls: {
 //       D1: 'audio_tracks/clean_d_str_pick.mp3',
