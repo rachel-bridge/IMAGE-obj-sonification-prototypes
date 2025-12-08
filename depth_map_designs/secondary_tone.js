@@ -35,6 +35,17 @@ list of objects w/ this schema...
 */
 
 // FILE-GLOBAL VARS
+// group names to text-to-speech (TTS) audio files mapping
+const NUMBERS_TTS = {
+  1: "audio_tracks/labels/numbers/one.mp3",
+  2: "audio_tracks/labels/numbers/two.mp3",
+  3: "audio_tracks/labels/numbers/three.mp3",
+  4: "audio_tracks/labels/numbers/four.mp3",
+  5: "audio_tracks/labels/numbers/five.mp3",
+  6: "audio_tracks/labels/numbers/six.mp3",
+};
+const LABEL_BASE_URL = "audio_tracks/labels/";
+
 // version control
 // T to play tones in one semantic category at once, F to play tones individually
 const GROUP_TONES = true;
@@ -52,7 +63,7 @@ const schema_url = "json_schemas/city_street.json"
 const TOGGLE_PLAY = ' '; //key to toggle play/pause
 
 // sonification timing parameters
-const TONE_SPACING = 0.3; //in seconds, time between end of one tone and start of next
+const TONE_SPACING = 0.45; //in seconds, time between end of one tone and start of next
 const SECONDARY_DURATION = 0.14; //in seconds, how long the secondary tone lasts
 
 var toneEvents = []; //list of tone event objs used in playback, populate during loading
@@ -87,6 +98,7 @@ function generateTonesFromObjects(data) {
       {
         baseUrl: "audio_tracks/",
         release: 0.3,
+        volume: -4
       }
     );
     // secondary tone doesn't need to be Sampler, just easier if they're the same.
@@ -132,7 +144,7 @@ function generateTonesFromObjects(data) {
 function generateToneGroupsFromObjects(data) {
   for (const toplvl_obj of Object.values(data)) {
     // If obj is of a semantic category that's already been covered, skip it.
-    if (toneGroupEvents.map((x) => x.groupName).includes(toplvl_obj.type)) {
+    if (toneGroupEvents.map((x) => x.groupLabel).includes(toplvl_obj.type)) {
       continue;
     }
     // Get all the objects in this semantic category (group).
@@ -142,6 +154,7 @@ function generateToneGroupsFromObjects(data) {
       urls: { D1: D_URL }, //not actually octave 1 but doesn't matter for this
       baseUrl: "audio_tracks/",
       release: 0.3,
+      volume: -4
     }).toDestination();
     // Start lists of the secondary tones and their offsets.
     var secondaryTones = [];
@@ -155,7 +168,8 @@ function generateToneGroupsFromObjects(data) {
       // Create the secondary (object-specific) tone for this group. Reduce
       // the volume bc the sound I grabbed for this is kinda loud.
       var secondary = new Tone.Sampler({
-        urls: { D1: "audio_tracks/" + SECONDARY_URL }
+        urls: { D1: "audio_tracks/" + SECONDARY_URL },
+        volume: 4
       });
       // Get the pan for this object, using x coordinate of centroid.
       const pan = normalizePanX(x);
@@ -179,7 +193,7 @@ function generateToneGroupsFromObjects(data) {
     }
 
     toneGroupEvents.push({
-      groupName: toplvl_obj.type,
+      groupLabel: toplvl_obj.type,
       primaryTone: primary,
       primaryDuration: Math.max(...offsets), // has to last until the last sec. tone
       secondaryTones: secondaryTones,
@@ -189,7 +203,7 @@ function generateToneGroupsFromObjects(data) {
   }
 
   // set correct times now that array is fully populated
-  setGroupStartTimes(toneGroupEvents);
+  setStartTimes(toneGroupEvents);
 }
 
 // set the start times for each tone in the toneEvents array
@@ -198,7 +212,7 @@ function setStartTimes(tonesArray) {
   var curTime = 0;
   for (var i = 0; i < tonesArray.length; i++) {
     tonesArray[i].time = curTime; //0 when i = 0
-    curTime = curTime + tonesArray[i].primaryDuration + SECONDARY_DURATION + TONE_SPACING;
+    curTime = curTime + tonesArray[i].primaryDuration + SECONDARY_DURATION + TONE_SPACING + 1;
   }
 }
 
@@ -275,13 +289,13 @@ function normalizeDepthToFilter(depth) {
 //   // for every element of toneEvents, check its category
 //   for (var category of toneEvents.map((x) => x.category)) {
 //     // if it's one we've already dealth with, skip
-//     if (newToneEvents.map((obj) => obj.groupName).includes(category)) {
+//     if (newToneEvents.map((obj) => obj.groupLabel).includes(category)) {
 //       continue;
 //     }
 //     // else, get *all elements* of toneEvents that are of that category
 //     const cat_objs = toneEvents.filter((obj) => obj.category == category);
 //     newToneEvents.push({
-//       groupName: category,
+//       groupLabel: category,
 //       primaryTone: cat_objs.map((obj) => obj.primaryTone)[0], //only use the 1st primary tone!
 //       primaryDuration: Math.max(...cat_objs.map((obj) => obj.offset)),
 //       secondaryTones: cat_objs.map((obj) => obj.secondaryTone),
@@ -308,6 +322,7 @@ function handleDown(e) {
   else {
     // play all the tones in sequence, without narration so far
     if (GROUP_TONES) {
+      createLabelPlayers(toneGroupEvents);
       const tonePart = new Tone.Part(playToneGroup, toneGroupEvents).start(0);
     } else {
       const tonePart = new Tone.Part(playTone, toneEvents).start(0);
@@ -326,10 +341,36 @@ function playTone(time, value) {
 
 // callback for the Tone.Part that plays tones: tones grouped by semantic category
 function playToneGroup(time, value) {
-  // value contains `groupName` for the 'captioning', not implemented yet
-  value.primaryTone.triggerAttackRelease("D1", value.primaryDuration, time);
+  // Schedule the label TTS. Play category a tiny bit before the "end" of
+  // number, b/c there seems to be a bit of padding built-in to the end of it.
+  const num_duration = value.groupLabel.player("number").buffer.duration - 0.2;
+  value.groupLabel.player("number").start(time);
+  value.groupLabel.player("category").start(time + num_duration)
+
+  // Schedule the primary and object tones in the group.
+  value.primaryTone.triggerAttackRelease("D1", value.primaryDuration, time + 1);
   for (var i = 0; i < value.secondaryTones.length; i++) {
-    value.secondaryTones[i].triggerAttackRelease("D1", SECONDARY_DURATION, time + value.offsets[i])
+    value.secondaryTones[i].triggerAttackRelease("D1", SECONDARY_DURATION, time + 1 + value.offsets[i])
+  }
+}
+
+// only for grouped so far!!
+function createLabelPlayers(tonesArray) {
+  for (const tone of tonesArray) {
+    const num_objs = tone.secondaryTones.length;
+    const number_TTS_url = NUMBERS_TTS[num_objs];
+
+    var category_TTS_url = "";
+    if (num_objs > 1) {
+      category_TTS_url = LABEL_BASE_URL + tone.groupLabel + "_plural.mp3";
+    } else {
+      category_TTS_url = LABEL_BASE_URL + tone.groupLabel + ".mp3";
+    }
+
+    tone.groupLabel = (new Tone.Players({
+      "category": category_TTS_url,
+      "number": number_TTS_url
+    }).toDestination());
   }
 }
 
