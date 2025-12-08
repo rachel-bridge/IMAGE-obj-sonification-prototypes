@@ -56,7 +56,7 @@ const ECHOLOCATION_MODE = true;
 // sonification generation URLs
 const D_URL = "clean_d_str_pick.mp3";
 const SECONDARY_URL = "tennis_ball_hit.mp3";
-const schema_url = "json_schemas/city_street.json"
+const schema_url = "image_jsons/city_street.json"
 // const schema_url = "json_schemas/test.json"
 
 // keybinds
