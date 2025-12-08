@@ -42,7 +42,6 @@ const GROUP_TONES = true;
 // echoes, F to have just the raw sound in the secondary tone.
 const ECHOLOCATION_MODE = true;
 
-
 // sonification generation URLs
 const D_URL = "clean_d_str_pick.mp3";
 const SECONDARY_URL = "tennis_ball_hit.mp3";
@@ -119,24 +118,14 @@ function generateTonesFromObjects(data) {
       name: objName,
       category: obj.type,
       primaryTone: primary,
+      primaryDuration: normalizeDepthToTime(depth),
       secondaryTone: secondary,
-      offset: normalizeDepthToTime(depth),
       time: 0 //set later! as in, literally the next thing...
     });
   }
 
   // set correct times now that array is fully populated
   setStartTimes(toneEvents);
-}
-
-// set the start times for each tone in the toneEvents array
-// increase next start time by (this one + its length + secondary tone duration + spacing)
-function setStartTimes(tonesArray) {
-  var curTime = 0;
-  for (var i = 0; i < tonesArray.length; i++) {
-    tonesArray[i].time = curTime; //0 when i = 0
-    curTime = curTime + tonesArray[i].offset + SECONDARY_DURATION + TONE_SPACING;
-  }
 }
 
 // repeat of generateTonesFromData but for GROUP_TONES = true.
@@ -203,8 +192,9 @@ function generateToneGroupsFromObjects(data) {
   setGroupStartTimes(toneGroupEvents);
 }
 
-// set start times for primary tones when tones are grouped by category
-function setGroupStartTimes(tonesArray) {
+// set the start times for each tone in the toneEvents array
+// increase next start time by (this one + its length + secondary tone duration + spacing)
+function setStartTimes(tonesArray) {
   var curTime = 0;
   for (var i = 0; i < tonesArray.length; i++) {
     tonesArray[i].time = curTime; //0 when i = 0
@@ -330,8 +320,8 @@ function handleDown(e) {
 // args MUST be (time, value) (API requirement)
 function playTone(time, value) {
   // value contains `name` for the 'captioning', not implemented yet
-  value.primaryTone.triggerAttackRelease("D1", value.offset, time);
-  value.secondaryTone.triggerAttackRelease("D1", SECONDARY_DURATION, time + value.offset);
+  value.primaryTone.triggerAttackRelease("D1", value.primaryDuration, time);
+  value.secondaryTone.triggerAttackRelease("D1", SECONDARY_DURATION, time + value.primaryDuration);
 }
 
 // callback for the Tone.Part that plays tones: tones grouped by semantic category
